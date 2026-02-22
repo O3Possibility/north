@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NORTH | AI Admissibility Engine</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="brand">
+    <span class="dot"></span>
+    <span class="brand-text">NORTH</span>
+  </div>
+  <div class="tagline">AI Admissibility Engine</div>
+</header>
+
+<main class="main-content">
+
+  <section class="tool-section">
+    <div class="prompt-card">
+      <label>Prompt</label>
+      <textarea placeholder="Enter a prompt to evaluate..."></textarea>
+      <button class="primary-btn">Evaluate</button>
+    </div>
+
+    <div class="about-pill">
+      <button class="about-toggle">About NORTH</button>
+      <div class="about-content">
+        <p>
+        NORTH is a model-agnostic layer that helps AI systems think more carefully before responding.
+        It evaluates prompts through a structured set of human knowledge systems — governance, science,
+        philosophy, engineering and culture — applying a triadic constraint lens (I/R/Sem), a balanced
+        five-note chord of perspectives, and a torsion check to reduce drift, overshoot, and blind agreement.
+        </p>
+        <p>
+        Rather than replacing a model, NORTH sits between intent and output — adding tension, reflection,
+        and structural accountability. It can work with different models and providers, acting as a
+        navigational compass for responsible thought and handling.
+        </p>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-slug">
+    NORTH | Navigational Orientation for Responsible Thought &amp; Handling
+  </div>
+</footer>
+
+<script>
+document.querySelector(".about-toggle").addEventListener("click", function(){
+  const content = document.querySelector(".about-content");
+  content.style.display = content.style.display === "block" ? "none" : "block";
+});
+</script>
+
+</body>
+</html>
