@@ -1,0 +1,104 @@
+
+body{
+  margin:0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background:#000;
+  color:#fff;
+}
+
+.site-header{
+  position:sticky;
+  top:0;
+  padding:20px 24px;
+  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.85);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  background:#6EC1FF;
+  border-radius:50%;
+}
+
+.brand-text{
+  font-size:22px;
+  font-weight:600;
+  letter-spacing:0.12em;
+}
+
+.tagline{
+  font-size:12px;
+  color:rgba(255,255,255,0.6);
+  margin-top:4px;
+}
+
+.main-content{
+  padding:40px 24px 120px 24px;
+  max-width:800px;
+  margin:0 auto;
+}
+
+.prompt-card{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+textarea{
+  min-height:120px;
+  background:#111;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  padding:12px;
+  color:#fff;
+}
+
+.primary-btn{
+  background:#fff;
+  color:#000;
+  border:none;
+  padding:12px;
+  border-radius:10px;
+  font-weight:600;
+}
+
+.about-pill{
+  margin-top:40px;
+}
+
+.about-toggle{
+  background:none;
+  border:1px solid rgba(110,193,255,0.4);
+  color:#6EC1FF;
+  padding:8px 16px;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+.about-content{
+  display:none;
+  margin-top:16px;
+  font-size:14px;
+  line-height:1.6;
+  color:rgba(255,255,255,0.75);
+}
+
+.site-footer{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  text-align:center;
+  padding:10px;
+  font-size:11px;
+  color:rgba(255,255,255,0.3);
+  background:rgba(0,0,0,0.9);
+}
