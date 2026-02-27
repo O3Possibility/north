@@ -14,18 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
 async function evaluateGate() {
     const prompt = document.getElementById("prompt").value;
     const btn = document.getElementById("btnEvaluate");
-    const btnText = btn.querySelector(".btn-text");
-    const dots = document.getElementById("loading-dots");
     const outputCard = document.getElementById("outputCard");
     const output = document.getElementById("fmo");
 
     if (!prompt) return;
 
-    // Start Loading State
+    // Start Loading State: No text or dots to hide/show.
     btn.disabled = true;
-    btn.classList.add("loading");
-    btnText.style.display = "none";
-    dots.style.display = "flex";
+    btn.classList.add("loading"); // TRIGGERS THE TRIPLET BLINK IN CSS
     outputCard.classList.add("hidden");
 
     try {
@@ -36,6 +32,7 @@ async function evaluateGate() {
         });
 
         const data = await response.json();
+        // Return either the FMO (success) or the raw_text (error box text from image_2a35fa.jpg)
         output.textContent = data.fused_meaning_object || data.raw_text;
         outputCard.classList.remove("hidden");
     } catch (err) {
@@ -45,8 +42,6 @@ async function evaluateGate() {
     } finally {
         // Reset Button
         btn.disabled = false;
-        btn.classList.remove("loading");
-        btnText.style.display = "inline";
-        dots.style.display = "none";
+        btn.classList.remove("loading"); // STOPS THE BLINK
     }
 }
