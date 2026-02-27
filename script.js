@@ -1,35 +1,44 @@
 /**
- * NORTH AI - Engine Control & Auditability Refactor
- * Implements: Swappable AI, Structured FMO Output, and Name-Sync for Backend
+ * NORTH AI - Meticulous Multi-Engine Refactor
+ * Synchronizes: Swappable AI (Mistral, GPT, Claude) & Structured Diagnostic Readout
  */
 
 const BACKEND_URL = "https://north-backend-kdgq.onrender.com/evaluate";
 
-// 1. Swappable AI Selection Logic
-let activeModel = "open-mistral-7b"; // Default internal name
+// Global state for the active engine
+let activeModel = "open-mistral-7b";
 
 document.addEventListener("DOMContentLoaded", () => {
+    /**
+     * Engine Selector Logic
+     * Maps frontend spans to the backend model-routing keys
+     */
     const options = document.querySelectorAll('.engine-option');
     
     options.forEach(option => {
         option.addEventListener('click', () => {
-            // Check if model is locked (GPT-4O / CLAUDE-3)
-            if (option.textContent.includes("(LOCKED)")) return;
+            // Updated: Removed the (LOCKED) check to allow swappability
+            const modelKey = option.getAttribute('data-model');
+            if (!modelKey) return;
 
-            // Update UI
+            // UI feedback for selection
             document.querySelector('.engine-option.active').classList.remove('active');
             option.classList.add('active');
 
-            // Update model reference for the API call
-            activeModel = option.getAttribute('data-model') || "open-mistral-7b";
+            // Update state
+            activeModel = modelKey;
+            console.log(`NORTH: Routing to ${activeModel}`);
         });
     });
 
-    // About Toggle Logic
+    /**
+     * About Section Toggle
+     */
     const aboutToggle = document.getElementById("aboutToggle");
     const aboutContent = document.getElementById("aboutContent");
-    if (aboutToggle) {
-        aboutToggle.addEventListener("click", () => {
+    if (aboutToggle && aboutContent) {
+        aboutToggle.addEventListener("click", (e) => {
+            e.preventDefault();
             aboutContent.classList.toggle("hidden");
         });
     }
@@ -37,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /**
  * Main Evaluation Engine
- * Handles the structured readout of the 5 Frameworks and Triadic Mapping
+ * Processes the prompt through the selected router and formats the 4-Phase Audit
  */
 async function evaluateGate() {
     const promptField = document.getElementById("prompt");
@@ -46,21 +55,23 @@ async function evaluateGate() {
     const output = document.getElementById("fmo");
     const errorBox = document.getElementById("errorBox");
 
-    if (!promptField || !promptField.value.trim()) return;
+    // Block empty intents
+    const userPrompt = promptField.value.trim();
+    if (!userPrompt) return;
 
-    // Enter Loading State
+    // 1. Enter Loading State
     btn.disabled = true;
     btn.classList.add("loading");
     outputCard.classList.add("hidden");
     errorBox.classList.add("hidden");
 
     try {
+        // 2. Transmit to Multi-Router Backend
         const response = await fetch(BACKEND_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            // Matches the corrected EvaluateRequest model in main.py
             body: JSON.stringify({ 
-                prompt: promptField.value.trim(),
+                prompt: userPrompt,
                 model: activeModel 
             })
         });
@@ -68,26 +79,35 @@ async function evaluateGate() {
         const data = await response.json();
 
         if (response.ok) {
-            // Handle the raw response and convert to structured HTML
+            // 3. Structured Formatting for Phase Audit
             const rawContent = data.fused_meaning_object || data.raw_text;
             
-            // Format for Auditability: Bold headers and handle line breaks
+            // This regex-chain converts the backend structure into the Module Design
             output.innerHTML = rawContent
-                .replace(/### (.*)/g, '<h3 class="fmo-header">$1</h3>') // Convert ### to styled headers
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')       // Support standard bolding
-                .replace(/\n/g, '<br>');                                // Maintain verticality
+                // Phase 1: Frameworks
+                .replace(/### 1\. AUDITED FRAMEWORKS/g, '<div class="diagnostic-label">Phase 1: Framework Audit</div>')
+                // Phase 2: Triadic Mapping
+                .replace(/### 2\. CORE TRIAD MAPPING \(I\/R\/Sem\)/g, '<div class="diagnostic-label">Phase 2: Triadic Mapping</div>')
+                // Phase 3: Torsion Rating
+                .replace(/### 3\. TORSION SCORE/g, '<div class="diagnostic-label">Phase 3: Torsion Rating</div>')
+                // Phase 4: Diagnostic Summary
+                .replace(/### 4\. DIAGNOSTIC SUMMARY/g, '<div class="diagnostic-label">Phase 4: FMO Output</div>')
+                // Standard markdown cleanup
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
 
             outputCard.classList.remove("hidden");
         } else {
-            // Display specific error details relayed from the backend
-            errorBox.textContent = `Engine: ${data.detail || "Verification Failed"}`;
+            // Handle HTTP errors or Backend Key failures
+            errorBox.textContent = `Engine Error: ${data.detail || "Verification sequence failed"}`;
             errorBox.classList.remove("hidden");
         }
     } catch (err) {
-        console.error("NORTH Connectivity Error:", err);
-        errorBox.textContent = "Connectivity failure. Ensure the Render instance is awake.";
+        console.error("NORTH System Failure:", err);
+        errorBox.textContent = "Connectivity failure: Verify Render Backend Status.";
         errorBox.classList.remove("hidden");
     } finally {
+        // 4. Exit Loading State
         btn.disabled = false;
         btn.classList.remove("loading");
     }
