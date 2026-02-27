@@ -18,30 +18,23 @@
 <main class="main-content">
 
   <section class="tool-section">
-    <div class="prompt-card">
-      <label>Prompt</label>
-      <textarea id="prompt" placeholder="Enter a prompt to evaluate..."></textarea>
-      <button id="btnEvaluate" class="primary-btn">Evaluate</button>
-    </div>
+  <div class="prompt-card">
+    <label for="prompt" style="color: #94a3b8;">Prompt</label>
+    <textarea id="prompt" placeholder="Enter a prompt to evaluate..." style="background: #0f172a; color: white; border: 1px solid #334155;"></textarea>
+    <button id="btnEvaluate" class="primary-btn" style="background: #3b82f6; color: white; font-weight: bold;">Evaluate</button>
+  </div>
 
-    <div id="statusRow" class="hidden" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
-      <span id="statusText" style="color: white; font-size: 0.875rem;">—</span>
-      <span id="timingText" style="color: #71717a; font-size: 0.75rem;"></span>
-    </div>
+  <div id="statusRow" class="hidden" style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+    <span id="statusDot" class="dot" style="width: 10px; height: 10px; background: #64748b; border-radius: 50%;"></span>
+    <span id="statusText" style="color: white; font-weight: bold;">—</span>
+    <span id="timingText" style="color: #94a3b8; font-size: 0.75rem;"></span>
+  </div>
 
-    <div style="margin-top: 8px; font-size: 0.75rem; color: #71717a;">
-      API: <span id="apiLabel"></span>
-    </div>
-    <div id="warmNote" style="font-size: 0.75rem; color: #71717a; margin-top: 4px;"></div>
-    <div id="errorBox" class="hidden" style="color: #ef4444; border: 1px solid #ef4444; padding: 8px; margin-top: 8px; border-radius: 4px;"></div>
-
-    <div class="about-pill">
-      <button class="about-toggle">About NORTH</button>
-      <div class="about-content">
-        <p>NORTH is a model-agnostic layer that helps AI systems think more carefully before responding...</p>
-      </div>
-    </div>
-  </section>
+  <div style="margin-top: 10px; font-size: 0.75rem; color: #64748b;">
+    API Status: <span id="apiLabel" style="color: #3b82f6;">Connecting...</span>
+  </div>
+  <div id="errorBox" class="hidden" style="margin-top: 10px; padding: 10px; background: #450a0a; border: 1px solid #ef4444; color: #fca5a5; border-radius: 4px;"></div>
+</section>
 
   <section id="outputCard" class="hidden" style="margin-top: 20px; border-top: 1px solid #27272a; padding-top: 20px;">
     <div id="fmo" style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; color: white;"></div>
