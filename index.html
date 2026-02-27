@@ -20,24 +20,30 @@
     </header>
 
     <main class="centered-content">
-        <div class="input-area">
-            <textarea id="prompt" placeholder="Enter intent..."></textarea>
-            
-            <div class="action-row">
-                <button id="btnEvaluate" onclick="evaluateGate()" title="Evaluate Intent"></button>
-            </div>
+    <div class="engine-selector">
+        <span class="engine-option active" data-model="open-mistral-7b">MISTRAL-7B</span>
+        <span class="engine-option" data-model="gpt-4o">GPT-4O (LOCKED)</span>
+        <span class="engine-option" data-model="claude-3">CLAUDE-3 (LOCKED)</span>
+    </div>
 
-            <div id="aboutContent" class="hidden overlay">
-                <p>NORTH is a model-agnostic layer that evaluates intent through governance, science, philosophy, engineering, and culture — applying a triadic constraint lens (I/R/Sem) and torsion check to reduce drift.</p>
-            </div>
-
-            <div id="errorBox" class="hidden"></div>
+    <div class="input-area">
+        <textarea id="prompt" placeholder="Enter intent..."></textarea>
+        
+        <div class="action-row">
+            <button id="btnEvaluate" onclick="evaluateGate()" title="Evaluate Intent"></button>
         </div>
 
-        <section id="outputCard" class="hidden">
-            <div id="fmo"></div>
-        </section>
-    </main>
+        <div id="aboutContent" class="hidden about-box">
+            <p>NORTH is a model-agnostic layer that evaluates intent through governance, science, philosophy, engineering, and culture — applying a triadic constraint lens (I/R/Sem) and torsion check to reduce drift.</p>
+        </div>
+
+        <div id="errorBox" class="hidden"></div>
+    </div>
+
+    <section id="outputCard" class="hidden">
+        <div id="fmo"></div>
+    </section>
+</main>
 
     <script src="script.js"></script>
 </body>
