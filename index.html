@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NORTH</title>
+    <title>NORTH | Admissibility Engine</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="top-nav">
-        <button id="aboutToggle">About</button>
+        <button id="aboutToggle">SYSTEM_INFO</button>
     </div>
 
     <header>
@@ -16,34 +16,34 @@
             <span id="statusDot"></span>
             <h1>NORTH</h1>
         </div>
-        <p class="subtitle">AI Admissibility Engine</p>
+        <p class="subtitle">UTCP ADMISSIBILITY GATEWAY</p>
     </header>
 
     <main class="centered-content">
-    <div class="engine-selector">
-    <span class="engine-option active" data-model="open-mistral-7b">MISTRAL-7B</span>
-    <span class="engine-option" data-model="gpt-4o">GPT-4O</span>
-    <span class="engine-option" data-model="claude-3">CLAUDE-3</span>
-</div>
-
-    <div class="input-area">
-        <textarea id="prompt" placeholder="Enter intent..."></textarea>
-        
-        <div class="action-row">
-            <button id="btnEvaluate" onclick="evaluateGate()" title="Evaluate Intent"></button>
+        <div class="engine-selector">
+            <span class="engine-option active" data-model="open-mistral-7b">MISTRAL-7B</span>
+            <span class="engine-option" data-model="gpt-4o">GPT-4O</span>
+            <span class="engine-option" data-model="claude-3">CLAUDE-3</span>
         </div>
 
-        <div id="aboutContent" class="hidden about-box">
-            <p>NORTH is a model-agnostic layer that evaluates intent through governance, science, philosophy, engineering, and culture — applying a triadic constraint lens (I/R/Sem) and torsion check to reduce drift.</p>
+        <div class="input-area">
+            <textarea id="prompt" placeholder="Enter intent for evaluation..."></textarea>
+            
+            <div class="action-row">
+                <button id="btnEvaluate" onclick="evaluateGate()" title="Initiate Audit"></button>
+            </div>
+
+            <div id="aboutContent" class="hidden about-box">
+                <p>NORTH evaluates intent via a triadic constraint lens (Indicative, Relational, Semantic) to reduce model drift and ensure alignment across Governance, Science, Philosophy, Engineering, and Culture.</p>
+            </div>
+
+            <div id="errorBox" class="hidden"></div>
         </div>
 
-        <div id="errorBox" class="hidden"></div>
-    </div>
-
-    <section id="outputCard" class="hidden">
-        <div id="fmo"></div>
-    </section>
-</main>
+        <section id="outputCard" class="hidden">
+            <div id="fmo"></div>
+        </section>
+    </main>
 
     <script src="script.js"></script>
 </body>
