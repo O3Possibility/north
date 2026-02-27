@@ -4,17 +4,15 @@
     --accent: #ffffff;
     --text-muted: #71717a;
     --text-main: #e4e4e7;
-    --input-bg: #09090b;
+    --input-bg: #0c0c0e;
 }
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     background-color: var(--bg);
     color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, system-ui, sans-serif;
     margin: 0;
     display: flex;
     flex-direction: column;
@@ -22,7 +20,7 @@ body {
     min-height: 100vh;
 }
 
-/* 1. Navigation */
+/* 1. Top Right Navigation */
 .top-nav {
     width: 100%;
     display: flex;
@@ -37,44 +35,32 @@ body {
     cursor: pointer;
     font-size: 0.85rem;
     letter-spacing: 0.5px;
-    transition: color 0.2s ease;
+    transition: color 0.2s;
 }
 
-#aboutToggle:hover {
-    color: var(--accent);
-}
+#aboutToggle:hover { color: var(--accent); }
 
-/* 2. Layout Containers */
+/* 2. Layout Hierarchy */
 header {
     width: 100%;
     max-width: 650px;
-    padding: 60px 20px 40px;
+    padding: 100px 20px 60px; /* 100px Drop */
 }
 
-.logo-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.logo-group { display: flex; align-items: center; gap: 15px; }
 
 #statusDot {
-    height: 8px;
-    width: 8px;
+    height: 10px; width: 10px;
     background-color: var(--accent);
     border-radius: 50%;
 }
 
-h1 {
-    font-size: 1.25rem;
-    font-weight: 500;
-    letter-spacing: 2px;
-    margin: 0;
-}
+h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: 3px; margin: 0; }
 
 .subtitle {
     color: var(--text-muted);
-    font-size: 0.75rem;
-    margin: 8px 0 0 20px;
+    font-size: 0.8rem;
+    margin: 10px 0 0 25px;
     text-transform: uppercase;
 }
 
@@ -82,78 +68,66 @@ h1 {
     width: 100%;
     max-width: 650px;
     padding: 0 20px;
-    margin-bottom: 100px; /* Space for the footer/output */
 }
 
-/* 3. Input Area */
+/* 3. Input & Action Area */
 textarea {
     width: 100%;
     height: 180px;
     background: var(--input-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 20px;
+    padding: 25px;
     color: #fff;
-    font-size: 1rem;
+    font-size: 1.1rem;
     line-height: 1.6;
     resize: none;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s;
 }
 
-textarea:focus {
-    border-color: #52525b;
-}
+textarea:focus { border-color: #52525b; }
 
 .action-row {
     display: flex;
     justify-content: flex-end;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
-/* 4. The Evaluate Button */
 #btnEvaluate {
-    width: 48px;
-    height: 48px;
+    width: 54px; height: 54px;
     background: var(--accent);
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    transition: transform 0.1s ease;
-}
-
-#btnEvaluate:active {
-    transform: scale(0.95);
 }
 
 /* Triplet Pulse Animation */
-.loading { 
-    animation: triplet-blink 1.2s infinite ease-in-out; 
-}
+.loading { animation: triplet-pulse 1.2s infinite ease-in-out; }
 
-@keyframes triplet-blink {
+@keyframes triplet-pulse {
     0%, 20% { opacity: 1; }
-    30%, 50% { opacity: 0.3; }
+    30%, 50% { opacity: 0.2; }
     60%, 80% { opacity: 1; }
-    90%, 100% { opacity: 0.3; }
+    90%, 100% { opacity: 0.2; }
 }
 
-/* 5. Output Sections (Fixed Overlap) */
+/* 4. Output & Result Formatting */
 .about-box {
     margin-top: 30px;
-    padding: 20px;
+    padding: 25px;
     border-left: 2px solid var(--border);
     color: var(--text-muted);
     font-size: 0.95rem;
-    line-height: 1.7;
-    background: rgba(255, 255, 255, 0.02);
+    line-height: 1.8;
 }
 
 #outputCard {
-    margin-top: 100px;
+    margin-top: 100px; /* Vertical split for output */
     width: 100%;
     border-top: 1px solid var(--border);
-    padding-top: 50px;
+    padding-top: 60px;
+    padding-bottom: 100px;
 }
 
 #fmo {
@@ -161,16 +135,14 @@ textarea:focus {
     font-size: 0.95rem;
     line-height: 1.8;
     color: var(--text-main);
-    white-space: pre-wrap; /* Maintains I/R/Sem line breaks */
+    white-space: pre-wrap; /* Critical for I/R/Sem formatting */
 }
 
 #errorBox {
-    margin-top: 20px;
+    margin-top: 30px;
     color: #fca5a5;
-    font-size: 0.9rem;
     font-family: monospace;
+    font-size: 0.9rem;
 }
 
-.hidden { 
-    display: none !important; 
-}
+.hidden { display: none !important; }
