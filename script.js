@@ -1,35 +1,28 @@
-// Hardcoded to eliminate the "Failed to fetch" param error
-const DEFAULT_API = "https://north-backend-kdgq.onrender.com"; 
+// Hardcoded to eliminate the "Failed to fetch" param error, but overridable via URL
+const DEFAULT_API = "https://north-backend-kdgq.onrender.com";
 
 function getApiBase() {
   const url = new URL(window.location.href);
   const api = url.searchParams.get("api") || DEFAULT_API;
   return (api || "").replace(/\/$/, "");
 }
+function el(id){ return document.getElementById(id); }
+function setVisible(id, show){ const n = el(id); if(n) n.classList.toggle("hidden", !show); }
 
-const el = (id) => document.getElementById(id);
-const setVisible = (id, show) => { if(el(id)) el(id).classList.toggle("hidden", !show); };
-
-// Status row synchronization
 function setStatus(status, ms, modelUsed){
   const row = el("statusRow");
-  if(row) {
-    row.classList.remove("hidden");
-    row.classList.add("flex");
-  }
-  if(el("statusText")) el("statusText").textContent = status || "—";
-  if(el("timingText")) el("timingText").textContent = ms ? `· ${Math.round(ms)}ms${modelUsed ? ` · model: ${modelUsed}` : ""}` : "";
+  row.classList.remove("hidden");
+  row.classList.add("flex");
+  el("statusText").textContent = status || "—";
+  el("timingText").textContent = ms ? `· ${Math.round(ms)}ms${modelUsed ? ` · model: ${modelUsed}` : ""}` : "";
 
   const dot = el("statusDot");
-  if(dot) {
-    dot.classList.remove("bg-zinc-600","bg-white","bg-red-500");
-    if(status === "ADMISSIBLE") dot.classList.add("bg-white");
-    else if(status === "REFUSAL") dot.classList.add("bg-red-500");
-    else dot.classList.add("bg-zinc-600");
-  }
+  dot.classList.remove("bg-zinc-600","bg-white","bg-red-500");
+  if(status === "ADMISSIBLE") dot.classList.add("bg-white");
+  else if(status === "REFUSAL") dot.classList.add("bg-red-500");
+  else dot.classList.add("bg-zinc-600");
 }
 
-// Lineage rendering for the Guide drawer
 function lineageRow(title, meta){
   const safe = v => (v === undefined || v === null || v === "") ? "—" : String(v);
   return `
@@ -44,7 +37,6 @@ function lineageRow(title, meta){
     </div>`;
 }
 
-// Data mapping for all HTML spans
 function setGuide(data){
   if(el("scoreI")) el("scoreI").textContent = data.scores?.I ?? "—";
   if(el("scoreR")) el("scoreR").textContent = data.scores?.R ?? "—";
@@ -54,6 +46,14 @@ function setGuide(data){
   if(el("scoreRho")) el("scoreRho").textContent = data.scores?.rho ?? "—";
   if(el("scoreRhoCrit")) el("scoreRhoCrit").textContent = data.scores?.rho_crit ?? "—";
 
+  // Diagnostics
+  if(el("eventType")) el("eventType").textContent = data.diagnostics?.event_type ?? data.reads?.[0]?.diagnostics?.event_type ?? "—";
+  if(el("nReads")) el("nReads").textContent = data.diagnostics?.reads ?? "—";
+  if(el("deltaL")) el("deltaL").textContent = (data.diagnostics?.deltaL !== undefined && data.diagnostics?.deltaL !== null) ? data.diagnostics.deltaL : "—";
+  if(el("refusalRate")) el("refusalRate").textContent = (data.diagnostics?.refusal_rate !== undefined && data.diagnostics?.refusal_rate !== null) ? data.diagnostics.refusal_rate : "—";
+
+  // Branch lineage
+  if(el("branchDepth")) el("branchDepth").textContent = data.branch?.depth ?? "—";
   if(el("branchId")) el("branchId").textContent = data.branch?.branch_id ?? "—";
   if(el("parentBranchId")) el("parentBranchId").textContent = data.branch?.parent_branch_id ?? "—";
 
@@ -67,51 +67,114 @@ function setGuide(data){
   }
 }
 
-async function evaluateGate() {
-  const prompt = el("prompt").value.trim();
-  if(!prompt) return;
-
-  el("btnEvaluate").disabled = true;
-  setVisible("outputCard", false);
+function showError(msg){
+  if(el("errorBox")) {
+    el("errorBox").textContent = msg;
+    setVisible("errorBox", true);
+  }
+}
+function clearError(){
   setVisible("errorBox", false);
-  setStatus("EVALUATING...", 0);
+  if(el("errorBox")) el("errorBox").textContent = "";
+}
 
-  try {
-    const res = await fetch(`${getApiBase()}/evaluate`, {
+let selectedModel = "default";
+function setModelPill(label){ if(el("modelNamePill")) el("modelNamePill").textContent = label; }
+
+function getOrCreateSessionId(){
+  const k = "north_session_id";
+  let v = localStorage.getItem(k);
+  if(!v){
+    v = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `sess_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(k, v);
+  }
+  return v;
+}
+
+function getLastBranchId(){ return localStorage.getItem("north_last_branch_id") || null; }
+function setLastBranchId(id){ if(id) localStorage.setItem("north_last_branch_id", id); }
+
+async function evaluatePrompt(){
+  clearError();
+  const api = getApiBase();
+  if(el("apiLabel")) el("apiLabel").textContent = api || "(set ?api=...)";
+  const prompt = el("prompt").value.trim();
+  if(!prompt) return showError("Enter a prompt.");
+  if(!api) return showError("API endpoint not set. Add ?api=https://YOUR-BACKEND-URL");
+
+  setVisible("outputCard", false);
+  setVisible("modelAnswerWrap", false);
+  setVisible("guideDrawer", false);
+
+  let warm2 = setTimeout(()=>{ if(el("warmNote")) el("warmNote").textContent = "Still warming… some free-tier hosts sleep. First call can take up to ~60s."; }, 12000);
+
+  const t0 = performance.now();
+  try{
+    const session_id = getOrCreateSessionId();
+    const linkLineage = el("linkLineage") ? el("linkLineage").checked : true;
+    const parent_branch_id = linkLineage ? getLastBranchId() : null;
+    const n_reads = parseInt(el("apertureReads")?.value || "1", 10) || 1;
+
+    const res = await fetch(`${api}/evaluate`, {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        prompt: prompt,
-        model: "open-mistral-7b", // Defaulting to Mistral to avoid MockAdapter crash
-        session_id: localStorage.getItem("north_session_id"),
-        parent_branch_id: localStorage.getItem("north_last_branch_id"),
-        n_reads: 1
+        prompt,
+        model: selectedModel,
+        provider: selectedModel === "mistral" ? "mistral" : null,
+        model_name: selectedModel === "mistral" ? (el("mistralModel")?.value?.trim() || null) : null,
+        api_key: selectedModel === "mistral" ? (el("mistralKey")?.value?.trim() || null) : null,
+        session_id,
+        parent_branch_id,
+        n_reads
       })
     });
 
+    const ms = performance.now() - t0;
+    clearTimeout(warm2);
+    if(el("warmNote")) el("warmNote").textContent = "Free-tier note: first request may take 10–30s on a cold start — consider it “moving up north.”";
+
+    if(!res.ok){
+      const txt = await res.text();
+      setStatus("ERROR", ms, null);
+      return showError(`API error (${res.status}): ${txt}`);
+    }
     const data = await res.json();
-    if(!res.ok) throw new Error(data.detail || "Server Error");
-
-    if(data.branch?.branch_id) localStorage.setItem("north_last_branch_id", data.branch.branch_id);
-
-    setStatus(data.status, 0, data.model_used);
-    el("fmo").textContent = data.fused_meaning_object || data.raw_text || "—";
+    if(data.branch?.branch_id) setLastBranchId(data.branch.branch_id);
+    setStatus(data.status, ms, data.model_used);
+    if(el("fmo")) el("fmo").textContent = data.fused_meaning_object || data.raw_text || "—";
     setGuide(data);
     setVisible("outputCard", true);
-
-  } catch(e) {
-    el("errorBox").textContent = e.message;
-    setVisible("errorBox", true);
-    setStatus("ERROR", 0);
-  } finally {
-    el("btnEvaluate").disabled = false;
+  }catch(e){
+    clearTimeout(warm2);
+    setStatus("ERROR", null, null);
+    showError(`Request failed: ${e.message}`);
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  if(!localStorage.getItem("north_session_id")) {
-      localStorage.setItem("north_session_id", crypto.randomUUID());
+function toggleGuide(){ setVisible("guideDrawer", el("guideDrawer").classList.contains("hidden")); }
+function openModal(){ setVisible("modelModal", true); }
+function closeModal(){ setVisible("modelModal", false); }
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  if(el("apiLabel")) el("apiLabel").textContent = getApiBase() || "(set ?api=...)";
+  if(el("btnEvaluate")) el("btnEvaluate").addEventListener("click", evaluatePrompt);
+  if(el("pillGuide")) el("pillGuide").addEventListener("click", toggleGuide);
+  if(el("pillModel")) el("pillModel").addEventListener("click", openModal);
+  if(el("closeModelModal")) el("closeModelModal").addEventListener("click", closeModal);
+
+  document.querySelectorAll("[data-model]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      selectedModel = btn.getAttribute("data-model");
+      const label = selectedModel === "default" ? "Default" : (selectedModel === "ollama" ? "Ollama" : (selectedModel === "mistral" ? "Mistral" : "Mock"));
+      setModelPill(label);
+      closeModal();
+    });
+  });
+
+  if(el("modelModal")) {
+    el("modelModal").addEventListener("click", (ev)=>{
+      if(ev.target === el("modelModal") || ev.target.classList.contains("bg-black/70")) closeModal();
+    });
   }
-  el("btnEvaluate").addEventListener("click", evaluateGate);
-  el("pillGuide").onclick = () => el("guideDrawer").classList.toggle("hidden");
 });
