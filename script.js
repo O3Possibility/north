@@ -11,46 +11,35 @@ document.addEventListener("DOMContentLoaded", () => {
     setVisible("errorBox", false);
 });
 
-async function evaluatePrompt(){
-    const prompt = el("prompt").value.trim();
-    if(!prompt) return alert("Enter a prompt.");
-    
-    setVisible("errorBox", false);
-    setVisible("outputCard", false);
-    el("btnEvaluate").textContent = "Evaluating...";
-    el("btnEvaluate").disabled = true;
+async function evaluateGate() {
+    const prompt = document.getElementById("prompt").value;
+    const btn = document.getElementById("evaluate-btn");
+    const dots = document.getElementById("loading-dots");
+    const output = document.getElementById("fmo");
+
+    if (!prompt) return;
+
+    // Start Loading State
+    btn.classList.add("loading");
+    dots.style.display = "flex";
+    btn.firstChild.textContent = ""; // Remove "Evaluate" text
+    output.textContent = "";
 
     try {
-        const res = await fetch(`${DEFAULT_API}/evaluate`, {
+        const response = await fetch("https://your-render-url.onrender.com/evaluate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include", 
-            body: JSON.stringify({ prompt, model: "default", n_reads: 1 })
+            body: JSON.stringify({ prompt: prompt })
         });
 
-        const data = await res.json();
-        
-        if(!res.ok) throw new Error(data.detail || "Engine Error");
-
-        // Fill Main Output
-        el("fmo").textContent = data.fused_meaning_object || data.raw_text || "No response";
-        
-        // Fill Analysis Scores (Restoring the 30 lines we cut earlier)
-        const scores = data.scores || {};
-        const fields = ['I','R','Sem','L','Tau','Rho','RhoCrit'];
-        fields.forEach(f => {
-            const span = el(`score${f}`);
-            if(span) span.textContent = `${f}: ${scores[f] || '0'}`;
-        });
-
-        setVisible("outputCard", true);
-
-    } catch(e) {
-        const errBox = el("errorBox");
-        errBox.textContent = `Error: ${e.message}`;
-        setVisible("errorBox", true);
+        const data = await response.json();
+        output.textContent = data.fused_meaning_object || data.raw_text;
+    } catch (err) {
+        output.textContent = "Connection Error. Check backend logs.";
     } finally {
-        el("btnEvaluate").textContent = "Evaluate";
-        el("btnEvaluate").disabled = false;
+        // End Loading State
+        btn.classList.remove("loading");
+        dots.style.display = "none";
+        btn.firstChild.textContent = "Evaluate";
     }
 }
