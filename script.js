@@ -1,47 +1,69 @@
-const DEFAULT_API = "https://north-backend-kdgq.onrender.com";
+// 1. Your actual backend URL
+const BACKEND_URL = "https://north-backend-kdgq.onrender.com/evaluate";
 
-function el(id){ return document.getElementById(id); }
-function setVisible(id, show){ const n = el(id); if(n) n.style.display = show ? "block" : "none"; }
+function el(id) { return document.getElementById(id); }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const apiLabel = el("apiLabel");
-    if(apiLabel) apiLabel.textContent = DEFAULT_API;
-    const btn = el("btnEvaluate");
-    if(btn) btn.addEventListener("click", evaluatePrompt);
-    setVisible("errorBox", false);
-});
+// Toggle visibility using classes to match your minimalist CSS
+function setVisible(id, show) { 
+    const n = el(id); 
+    if(n) {
+        if(show) n.classList.remove("hidden");
+        else n.classList.add("hidden");
+    }
+}
 
 async function evaluateGate() {
-    const prompt = document.getElementById("prompt").value;
-    const btn = document.getElementById("btnEvaluate");
-    const outputCard = document.getElementById("outputCard");
-    const output = document.getElementById("fmo");
+    const promptField = el("prompt");
+    const btn = el("btnEvaluate");
+    const outputCard = el("outputCard");
+    const output = el("fmo");
+    const errorBox = el("errorBox");
 
-    if (!prompt) return;
+    if (!promptField || !promptField.value.trim()) return;
 
-    // Start Loading State: No text or dots to hide/show.
+    // Start Loading State (Triplet Blink)
     btn.disabled = true;
-    btn.classList.add("loading"); // TRIGGERS THE TRIPLET BLINK IN CSS
-    outputCard.classList.add("hidden");
+    btn.classList.add("loading"); 
+    setVisible("outputCard", false);
+    setVisible("errorBox", false);
 
     try {
-        const response = await fetch("https://your-backend.onrender.com/evaluate", {
+        const response = await fetch(BACKEND_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: prompt })
+            body: JSON.stringify({ prompt: promptField.value })
         });
 
         const data = await response.json();
-        // Return either the FMO (success) or the raw_text (error box text from image_2a35fa.jpg)
-        output.textContent = data.fused_meaning_object || data.raw_text;
-        outputCard.classList.remove("hidden");
+
+        if (response.ok) {
+            // SUCCESS: Display the FMO
+            output.textContent = data.fused_meaning_object || data.raw_text;
+            setVisible("outputCard", true);
+        } else {
+            // API ERROR (like the 401 you saw)
+            const errorMsg = data.detail || data.raw_text || `Error ${response.status}`;
+            errorBox.textContent = `Engine: ${errorMsg}`;
+            setVisible("errorBox", true);
+        }
     } catch (err) {
         console.error(err);
-        output.textContent = "Evaluation failed. Check connectivity.";
-        outputCard.classList.remove("hidden");
+        errorBox.textContent = "Connectivity failure. Check if Render backend is awake.";
+        setVisible("errorBox", true);
     } finally {
-        // Reset Button
+        // Reset Button & Stop Blink
         btn.disabled = false;
-        btn.classList.remove("loading"); // STOPS THE BLINK
+        btn.classList.remove("loading");
     }
 }
+
+// Ensure the "About" toggle still works
+document.addEventListener("DOMContentLoaded", () => {
+    const aboutToggle = el("aboutToggle");
+    if(aboutToggle) {
+        aboutToggle.addEventListener("click", () => {
+            const content = el("aboutContent");
+            if(content) content.classList.toggle("hidden");
+        });
+    }
+});
