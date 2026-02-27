@@ -5,76 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NORTH | Admissibility Engine</title>
     <style>
-        body { background:#000; color:#eee; font-family:sans-serif; }
+        body { background:#000; color:#eee; font-family:sans-serif; margin:0; padding:0; }
         .hidden { display:none; }
+        .engine-option.active { border-bottom:1px solid #fff; color:#fff !important; }
+        textarea:focus { outline:none; border-color:#444 !important; }
     </style>
 </head>
 <body>
-    <div class="top-nav" style="padding:20px; text-align:right;">
+    <div class="top-nav" style="padding:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <button id="pillModel" style="background:none; border:1px solid #333; color:#666; font-size:10px; cursor:pointer; padding:5px 10px; margin-right:10px;">MODEL: <span id="modelNamePill" style="color:#eee;">MISTRAL-7B</span></button>
+        </div>
         <button id="aboutToggle" style="background:none; border:1px solid #333; color:#666; font-size:10px; cursor:pointer; padding:5px 10px;">SYSTEM_INFO</button>
     </div>
-    <header style="text-align:center; margin-bottom:40px;">
+
+    <header style="text-align:center; margin-bottom:40px; margin-top:20px;">
         <h1 style="letter-spacing:10px; margin:0;">NORTH</h1>
         <p style="color:#666; font-size:10px; letter-spacing:2px;">UTCP ADMISSIBILITY GATEWAY</p>
     </header>
+
     <main style="max-width:600px; margin:0 auto; padding:0 20px;">
-        <div class="engine-selector" style="display:flex; justify-content:center; gap:20px; margin-bottom:30px; font-size:10px; color:#444; cursor:pointer;">
-            <span class="engine-option active" data-model="open-mistral-7b" style="border-bottom:1px solid #fff; color:#fff;">MISTRAL-7B</span>
-            <span class="engine-option" data-model="gpt-4o" style="color:#666;">GPT-4O</span>
-            <span class="engine-option" data-model="claude-3" style="color:#666;">CLAUDE-3</span>
+        
+        <div id="modelModal" class="hidden" style="background:#0a0a0a; border:1px solid #222; padding:20px; margin-bottom:20px; border-radius:8px;">
+            <div style="font-size:10px; color:#444; margin-bottom:15px; display:flex; justify-content:space-between;">
+                <span>ENGINE_CONFIG</span>
+                <span id="closeModelModal" style="cursor:pointer; color:#f44;">[CLOSE]</span>
+            </div>
+            <div class="engine-selector" style="display:flex; gap:20px; margin-bottom:20px; font-size:10px;">
+                <span class="engine-option active" data-model="mistral" style="color:#666; cursor:pointer;">MISTRAL (API)</span>
+                <span class="engine-option" data-model="default" style="color:#666; cursor:pointer;">MOCK (DEMO)</span>
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="font-size:10px; color:#444; display:block; margin-bottom:5px;">APERTURE_READS (n_reads)</label>
+                <input type="number" id="apertureReads" value="1" min="1" max="5" style="background:#111; border:1px solid #222; color:#fff; font-size:12px; padding:5px; width:50px;">
+            </div>
+            <div id="mistralConfig" style="border-top:1px solid #222; padding-top:15px;">
+                <input type="text" id="mistralModel" placeholder="mistral-tiny" style="width:100%; background:#111; border:1px solid #222; color:#fff; padding:8px; margin-bottom:8px; font-size:11px;">
+                <input type="password" id="mistralKey" placeholder="Mistral API Key" style="width:100%; background:#111; border:1px solid #222; color:#fff; padding:8px; font-size:11px;">
+            </div>
         </div>
+
         <div id="aboutContent" class="hidden" style="background:#0a0a0a; border:1px solid #222; padding:15px; margin-bottom:20px; font-size:11px; color:#888;">
             <p><strong>MISSION:</strong> Triadic Constraint Audit (I/R/Sem)</p>
-            <p>LINEAGE_ID: <span id="branchId" style="color:#eee;">NONE</span></p>
+            <p>Session-persistent braid linking (parent_branch_id supported).</p>
         </div>
+
         <div class="input-area">
-            <textarea id="prompt" style="width:100%; height:120px; background:#050505; border:1px solid #222; color:#fff; padding:15px; box-sizing:border-box; border-radius:8px;" placeholder="Enter intent for evaluation..."></textarea>
-            <button id="btnEvaluate" style="width:100%; margin-top:15px; padding:15px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">INITIATE AUDIT</button>
-            <div id="warmNote" style="margin-top:10px; font-size:10px; color:#666;">Free-tier note: first request may take 10–30s on a cold start — consider it “moving up north.”</div>
+            <textarea id="prompt" style="width:100%; height:120px; background:#050505; border:1px solid #222; color:#fff; padding:15px; box-sizing:border-box; border-radius:8px; font-family:monospace;" placeholder="Enter intent for evaluation..."></textarea>
+            
+            <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                <input type="checkbox" id="linkLineage" checked>
+                <label for="linkLineage" style="font-size:10px; color:#444;">LINK_TO_PREVIOUS_BRANCH</label>
+            </div>
+
+            <button id="btnEvaluate" style="width:100%; margin-top:15px; padding:15px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; letter-spacing:1px;">INITIATE AUDIT</button>
+            <div id="warmNote" style="margin-top:10px; font-size:10px; color:#666;">Free-tier note: first request may take 10–30s on a cold start.</div>
             <div id="errorBox" class="hidden" style="margin-top:20px; color:#f44; font-size:12px; border:1px solid #411; padding:10px; background:#200;"></div>
         </div>
-        <section id="outputCard" class="hidden" style="margin-top:40px;">
-            <div id="statusRow" class="hidden" style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+
+        <section id="outputCard" class="hidden" style="margin-top:40px; border-top:1px solid #222; padding-top:20px;">
+            <div id="statusRow" style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
                 <div id="statusDot" style="width:8px; height:8px; border-radius:50%; background:#666;"></div>
-                <div id="statusText" style="font-size:12px; font-weight:bold;">—</div>
+                <div id="statusText" style="font-size:11px; font-weight:bold; letter-spacing:1px;">—</div>
                 <div id="timingText" style="font-size:10px; color:#666;"></div>
             </div>
-            <div style="margin-bottom:20px;">
-                <div style="font-size:10px; color:#666; text-transform:uppercase;">Fused Meaning Object</div>
-                <pre id="fmo" style="line-height:1.6; font-size:14px; color:#ccc; background:#111; padding:15px; border-radius:8px; border:1px solid #222; white-space:pre-wrap;"></pre>
+
+            <div style="margin-bottom:30px;">
+                <div style="font-size:10px; color:#444; text-transform:uppercase; margin-bottom:10px; letter-spacing:1px;">Fused Meaning Object</div>
+                <pre id="fmo" style="line-height:1.6; font-size:14px; color:#ccc; background:#0a0a0a; padding:20px; border-radius:8px; border:1px solid #222; white-space:pre-wrap; font-family:serif;"></pre>
             </div>
-            <button id="pillGuide" style="background:none; border:1px solid #333; color:#666; font-size:10px; cursor:pointer; padding:5px 10px; margin-bottom:10px;">GUIDE</button>
-            <div id="guideDrawer" class="hidden" style="background:#0a0a0a; border:1px solid #222; padding:15px; border-radius:8px;">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+            <button id="pillGuide" style="background:none; border:1px solid #333; color:#666; font-size:10px; cursor:pointer; padding:5px 10px; margin-bottom:15px;">OPEN_GUIDE</button>
+            
+            <div id="guideDrawer" class="hidden" style="background:#050505; border:1px solid #222; padding:20px; border-radius:8px; margin-bottom:40px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
                     <div>
-                        <div style="font-size:10px; color:#666; text-transform:uppercase;">Scores</div>
-                        <div style="margin-top:10px; font-size:12px; color:#ccc; line-height:1.5;">
-                            <div>I: <span id="scoreI">—</span></div>
-                            <div>R: <span id="scoreR">—</span></div>
-                            <div>Sem: <span id="scoreSem">—</span></div>
-                            <div>L: <span id="scoreL">—</span></div>
-                            <div>τ: <span id="scoreTau">—</span></div>
-                            <div>ρ: <span id="scoreRho">—</span></div>
+                        <div style="font-size:10px; color:#444; text-transform:uppercase; border-bottom:1px solid #222; padding-bottom:5px;">Metrics</div>
+                        <div style="margin-top:15px; font-size:12px; color:#aaa; line-height:1.8; font-family:monospace;">
+                            <div>I (Indicative): <span id="scoreI" style="color:#eee;">—</span></div>
+                            <div>R (Relational): <span id="scoreR" style="color:#eee;">—</span></div>
+                            <div>Sem (Semantic): <span id="scoreSem" style="color:#eee;">—</span></div>
+                            <div style="margin:10px 0; border-top:1px solid #111;"></div>
+                            <div>L (Logic): <span id="scoreL">—</span></div>
+                            <div>τ (Threshold): <span id="scoreTau">—</span></div>
+                            <div>ρ (Torsion): <span id="scoreRho">—</span></div>
                             <div>ρcrit: <span id="scoreRhoCrit">—</span></div>
-                            <div style="margin:10px 0; border-top:1px solid #222;"></div>
-                            <div>Event: <span id="eventType">—</span></div>
-                            <div>Reads: <span id="nReads">—</span></div>
-                            <div>ΔL: <span id="deltaL">—</span></div>
-                            <div>Refusal rate: <span id="refusalRate">—</span></div>
-                            <div style="margin:10px 0; border-top:1px solid #222;"></div>
-                            <div>Branch depth: <span id="branchDepth">—</span></div>
-                            <div>Branch: <span id="branchId">—</span></div>
-                            <div>Parent: <span id="parentBranchId">—</span></div>
                         </div>
                     </div>
                     <div>
-                        <div style="font-size:10px; color:#666; text-transform:uppercase;">Chord Lineage</div>
-                        <div id="lineage" style="margin-top:10px;"></div>
+                        <div style="font-size:10px; color:#444; text-transform:uppercase; border-bottom:1px solid #222; padding-bottom:5px;">Lineage</div>
+                        <div id="lineage" style="margin-top:15px;"></div>
+                        <div style="margin-top:20px; font-size:10px; color:#333; line-height:1.5;">
+                            <div>BRANCH_ID: <span id="branchId">—</span></div>
+                            <div>PARENT_ID: <span id="parentBranchId">—</span></div>
+                            <div>DEPTH: <span id="branchDepth">—</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
+
     <script src="script.js"></script>
 </body>
 </html>
