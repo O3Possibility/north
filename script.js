@@ -1,95 +1,94 @@
 /**
- * NORTH AI - Meticulous Refactor
- * Fixes: About toggle logic, Absolute URL targeting, and Error Verbosity
+ * NORTH AI - Engine Control & Auditability Refactor
+ * Implements: Swappable AI, Structured FMO Output, and Name-Sync for Backend
  */
 
-// Use the absolute URL to prevent the 404s seen in browser logs
 const BACKEND_URL = "https://north-backend-kdgq.onrender.com/evaluate";
 
-function el(id) { return document.getElementById(id); }
+// 1. Swappable AI Selection Logic
+let activeModel = "open-mistral-7b"; // Default internal name
 
-/**
- * UI State Management
- * Ensures centered layout elements are toggled without breaking flow
- */
-function setVisible(id, show) { 
-    const n = el(id); 
-    if(n) {
-        if(show) n.classList.remove("hidden");
-        else n.classList.add("hidden");
+document.addEventListener("DOMContentLoaded", () => {
+    const options = document.querySelectorAll('.engine-option');
+    
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            // Check if model is locked (GPT-4O / CLAUDE-3)
+            if (option.textContent.includes("(LOCKED)")) return;
+
+            // Update UI
+            document.querySelector('.engine-option.active').classList.remove('active');
+            option.classList.add('active');
+
+            // Update model reference for the API call
+            activeModel = option.getAttribute('data-model') || "open-mistral-7b";
+        });
+    });
+
+    // About Toggle Logic
+    const aboutToggle = document.getElementById("aboutToggle");
+    const aboutContent = document.getElementById("aboutContent");
+    if (aboutToggle) {
+        aboutToggle.addEventListener("click", () => {
+            aboutContent.classList.toggle("hidden");
+        });
     }
-}
+});
 
 /**
- * Main Evaluation Logic
- * Triggers the monochromatic triplet blink and handles the 401/404 responses
+ * Main Evaluation Engine
+ * Handles the structured readout of the 5 Frameworks and Triadic Mapping
  */
 async function evaluateGate() {
-    const promptField = el("prompt");
-    const btn = el("btnEvaluate");
-    const outputCard = el("outputCard");
-    const output = el("fmo");
-    const errorBox = el("errorBox");
+    const promptField = document.getElementById("prompt");
+    const btn = document.getElementById("btnEvaluate");
+    const outputCard = document.getElementById("outputCard");
+    const output = document.getElementById("fmo");
+    const errorBox = document.getElementById("errorBox");
 
-    // Prevent empty submissions
     if (!promptField || !promptField.value.trim()) return;
 
-    // 1. Enter Processing State
+    // Enter Loading State
     btn.disabled = true;
-    btn.classList.add("loading"); // Starts the triplet blink in CSS
-    setVisible("outputCard", false);
-    setVisible("errorBox", false);
+    btn.classList.add("loading");
+    outputCard.classList.add("hidden");
+    errorBox.classList.add("hidden");
 
     try {
         const response = await fetch(BACKEND_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: promptField.value.trim() })
+            // Matches the corrected EvaluateRequest model in main.py
+            body: JSON.stringify({ 
+                prompt: promptField.value.trim(),
+                model: activeModel 
+            })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            // SUCCESS: Response populated from backend
-            output.textContent = data.fused_meaning_object || data.raw_text;
-            setVisible("outputCard", true);
-        } else {
-            // AUTH/API ERROR: Catching the 401 seen in image_28d49c.jpg
-            let errorDetail = data.detail || data.raw_text || `Status ${response.status}`;
+            // Handle the raw response and convert to structured HTML
+            const rawContent = data.fused_meaning_object || data.raw_text;
             
-            // Helpful hint for the specific 401 issue
-            if (response.status === 401) {
-                errorDetail = "Mistral Unauthorized. Check API Key/Billing sync.";
-            }
+            // Format for Auditability: Bold headers and handle line breaks
+            output.innerHTML = rawContent
+                .replace(/### (.*)/g, '<h3 class="fmo-header">$1</h3>') // Convert ### to styled headers
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')       // Support standard bolding
+                .replace(/\n/g, '<br>');                                // Maintain verticality
 
-            errorBox.textContent = `Engine: ${errorDetail}`;
-            setVisible("errorBox", true);
+            outputCard.classList.remove("hidden");
+        } else {
+            // Display specific error details relayed from the backend
+            errorBox.textContent = `Engine: ${data.detail || "Verification Failed"}`;
+            errorBox.classList.remove("hidden");
         }
     } catch (err) {
-        // CATCH 404 or Network Failure
-        console.error("Connectivity Failure:", err);
-        errorBox.textContent = "Connectivity failure. Ensure the Render backend is live.";
-        setVisible("errorBox", true);
+        console.error("NORTH Connectivity Error:", err);
+        errorBox.textContent = "Connectivity failure. Ensure the Render instance is awake.";
+        errorBox.classList.remove("hidden");
     } finally {
-        // 2. Exit Processing State
         btn.disabled = false;
-        btn.classList.remove("loading"); // Stops the triplet blink
+        btn.classList.remove("loading");
     }
 }
-
-/**
- * Initializer
- * Sets up the Top-Right "About" toggle and cleans the UI
- */
-document.addEventListener("DOMContentLoaded", () => {
-    const aboutToggle = el("aboutToggle");
-    const aboutContent = el("aboutContent");
-
-    if (aboutToggle && aboutContent) {
-        aboutToggle.addEventListener("click", (e) => {
-            e.preventDefault();
-            // Toggles the hidden state for the centered about info
-            aboutContent.classList.toggle("hidden");
-        });
-    }
-});
