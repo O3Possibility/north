@@ -1,123 +1,149 @@
 :root {
-    --bg: #ffffff;
-    --text: #000000;
-    --accent: #000000;
-    --border: #e0e0e0;
+    --bg: #000000;
+    --panel: #09090b;
+    --border: #27272a;
+    --text-main: #ffffff;
+    --text-muted: #71717a;
+    --accent: #ffffff;
 }
 
 body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', -apple-system, sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
     display: flex;
     justify-content: center;
-    padding: 40px 20px;
-    margin: 0;
 }
 
-.container {
-    width: 100%;
+header {
+    padding: 60px 20px 20px 40px;
     max-width: 600px;
+    width: 100%;
+}
+
+.logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#statusDot {
+    height: 8px;
+    width: 8px;
+    background-color: #22c55e; /* Green for "Ready" */
+    border-radius: 50%;
 }
 
 h1 {
-    font-weight: 700;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    margin-bottom: 32px;
+    margin: 0;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    font-weight: 500;
 }
 
-/* Form Styling */
-.input-group {
-    margin-bottom: 24px;
-}
-
-label {
-    display: block;
-    font-size: 12px;
+.subtitle {
+    color: var(--text-muted);
+    margin: 4px 0 0 20px;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    font-weight: 600;
-    margin-bottom: 8px;
-    opacity: 0.6;
+    letter-spacing: 1px;
+}
+
+main {
+    max-width: 600px;
+    width: 100%;
+    padding: 20px;
 }
 
 textarea {
     width: 100%;
+    height: 160px;
+    background: var(--panel);
+    color: white;
     border: 1px solid var(--border);
-    padding: 12px;
-    font-size: 16px;
+    border-radius: 8px;
+    padding: 15px;
+    font-size: 1rem;
     resize: none;
-    border-radius: 4px;
-    transition: border-color 0.2s;
+    box-sizing: border-box;
 }
 
 textarea:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: #52525b;
 }
 
-/* The Evaluate Button & Dot Animation */
-.button-container {
+.action-row {
     display: flex;
     justify-content: flex-end;
-    align-items: center;
-    margin-top: 12px;
+    margin-top: 15px;
 }
 
-button {
+/* Evaluate Button */
+#btnEvaluate {
     background: var(--accent);
-    color: #fff;
+    color: black;
     border: none;
     padding: 10px 24px;
-    font-weight: 600;
-    border-radius: 20px; /* Modern pill shape */
+    border-radius: 20px;
     cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
-    gap: 12px;
-    transition: opacity 0.2s;
+    min-width: 120px;
+    justify-content: center;
+    transition: transform 0.1s;
 }
 
-button:hover {
-    opacity: 0.8;
-}
+#btnEvaluate:active { transform: scale(0.98); }
 
+/* The 3-Dot Animation */
 .dots-container {
-    display: none; /* Hidden by default */
+    display: none; /* Hidden until loading */
     gap: 4px;
 }
 
 .dot {
-    width: 4px;
-    height: 4px;
-    background: #fff;
+    width: 5px;
+    height: 5px;
+    background: black;
     border-radius: 50%;
-    opacity: 0.3;
+    opacity: 0.2;
 }
 
-/* 1, 2, 3 sequence animation */
+/* Sequential 1, 2, 3 animation */
 .loading .dot {
-    animation: dot-flash 1.2s infinite linear;
+    animation: dot-pulse 1.4s infinite linear;
 }
 
 .loading .dot:nth-child(2) { animation-delay: 0.2s; }
 .loading .dot:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes dot-flash {
-    0%, 100% { opacity: 0.3; }
+@keyframes dot-pulse {
+    0%, 100% { opacity: 0.2; }
     50% { opacity: 1; }
 }
 
-/* Output Area */
 #fmo {
     margin-top: 40px;
-    padding-top: 24px;
+    padding: 20px;
     border-top: 1px solid var(--border);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
-    line-height: 1.6;
-    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: #d4d4d8;
 }
 
-/* Hide footer/technical URL */
-footer { display: none; }
+.hidden { display: none; }
+
+.about-section { margin-top: 20px; }
+#aboutToggle {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0;
+}
