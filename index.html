@@ -6,49 +6,36 @@
     <title>NORTH | Admissibility Engine</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <div class="top-nav">
-        <button id="aboutToggle">SYSTEM_INFO</button>
+<body style="background:#000; color:#eee; font-family:sans-serif;">
+    <div class="top-nav" style="padding:20px; text-align:right;">
+        <button id="aboutToggle" style="background:none; border:1px solid #333; color:#666; font-size:10px; cursor:pointer; padding:5px 10px;">SYSTEM_INFO</button>
     </div>
 
-    <header>
-        <div class="logo-group">
-            <span id="statusDot"></span>
-            <h1>NORTH</h1>
-        </div>
-        <p class="subtitle">UTCP ADMISSIBILITY GATEWAY</p>
+    <header style="text-align:center; margin-bottom:40px;">
+        <h1 style="letter-spacing:10px; margin:0;">NORTH</h1>
+        <p style="color:#666; font-size:10px; letter-spacing:2px;">UTCP ADMISSIBILITY GATEWAY</p>
     </header>
 
-    <main class="centered-content">
-        <div class="engine-selector">
-            <span class="engine-option active" data-model="open-mistral-7b">MISTRAL-7B</span>
+    <main style="max-width:600px; margin:0 auto; padding:0 20px;">
+        <div class="engine-selector" style="display:flex; justify-content:center; gap:20px; margin-bottom:30px; font-size:10px; color:#444; cursor:pointer;">
+            <span class="engine-option active" data-model="open-mistral-7b" style="border-bottom:1px solid #fff; color:#fff;">MISTRAL-7B</span>
             <span class="engine-option" data-model="gpt-4o">GPT-4O</span>
             <span class="engine-option" data-model="claude-3">CLAUDE-3</span>
         </div>
 
-        <div class="input-area">
-            <textarea id="prompt" placeholder="Enter intent for evaluation..."></textarea>
-            
-            <div class="action-row">
-                <button id="btnEvaluate" onclick="evaluateGate()" title="Initiate Audit"></button>
-            </div>
-
-            <div id="aboutContent" class="hidden about-box">
-                <div class="metadata-lineage">
-                    <p><strong>MISSION:</strong> Reduce model drift via triadic constraint (I/R/Sem).</p>
-                    <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
-                    <div style="font-family: monospace; font-size: 0.7rem; color: #666;">
-                        LINEAGE_ID: <span id="branchId">NONE</span><br>
-                        LAST_IRS: [<span id="scoreI">-</span>, <span id="scoreR">-</span>, <span id="scoreSem">-</span>] / <span id="scoreRho">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="errorBox" class="hidden"></div>
+        <div id="aboutContent" class="hidden" style="background:#0a0a0a; border:1px solid #222; padding:15px; margin-bottom:20px; font-size:11px; color:#888;">
+            <p><strong>MISSION:</strong> Triadic Constraint Audit (I/R/Sem)</p>
+            <p>LINEAGE_ID: <span id="branchId" style="color:#eee;">NONE</span></p>
         </div>
 
-        <section id="outputCard" class="hidden">
-            <div id="fmo"></div>
+        <div class="input-area">
+            <textarea id="prompt" style="width:100%; height:120px; background:#050505; border:1px solid #222; color:#fff; padding:15px; box-sizing:border-box; border-radius:8px;" placeholder="Enter intent for evaluation..."></textarea>
+            <button id="btnEvaluate" onclick="evaluateGate()" style="width:100%; margin-top:15px; padding:15px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">INITIATE AUDIT</button>
+            <div id="errorBox" class="hidden" style="margin-top:20px; color:#f44; font-size:12px; border:1px solid #411; padding:10px; background:#200;"></div>
+        </div>
+
+        <section id="outputCard" class="hidden" style="margin-top:40px;">
+            <div id="fmo" style="line-height:1.6; font-size:14px; color:#ccc;"></div>
         </section>
     </main>
 
