@@ -13,20 +13,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function evaluateGate() {
     const prompt = document.getElementById("prompt").value;
-    const btn = document.getElementById("evaluate-btn");
+    const btn = document.getElementById("btnEvaluate");
+    const btnText = btn.querySelector(".btn-text");
     const dots = document.getElementById("loading-dots");
+    const outputCard = document.getElementById("outputCard");
     const output = document.getElementById("fmo");
 
     if (!prompt) return;
 
     // Start Loading State
+    btn.disabled = true;
     btn.classList.add("loading");
+    btnText.style.display = "none";
     dots.style.display = "flex";
-    btn.firstChild.textContent = ""; // Remove "Evaluate" text
-    output.textContent = "";
+    outputCard.classList.add("hidden");
 
     try {
-        const response = await fetch("https://your-render-url.onrender.com/evaluate", {
+        const response = await fetch("https://your-backend.onrender.com/evaluate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ prompt: prompt })
@@ -34,12 +37,16 @@ async function evaluateGate() {
 
         const data = await response.json();
         output.textContent = data.fused_meaning_object || data.raw_text;
+        outputCard.classList.remove("hidden");
     } catch (err) {
-        output.textContent = "Connection Error. Check backend logs.";
+        console.error(err);
+        output.textContent = "Evaluation failed. Check connectivity.";
+        outputCard.classList.remove("hidden");
     } finally {
-        // End Loading State
+        // Reset Button
+        btn.disabled = false;
         btn.classList.remove("loading");
+        btnText.style.display = "inline";
         dots.style.display = "none";
-        btn.firstChild.textContent = "Evaluate";
     }
 }
