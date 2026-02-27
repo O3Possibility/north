@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body style="background-color: black; color: white; font-family: sans-serif; margin: 0;">
-    <header style="padding: 20px 20px 20px 40px;">
+    <header style="padding: 40px 20px 20px 40px;">
         <div style="display: flex; align-items: center; gap: 10px;">
             <span id="statusDot" style="height: 12px; width: 12px; background-color: #52525b; border-radius: 50%;"></span>
             <h1 style="margin: 0; font-size: 1.5rem; letter-spacing: 1px;">NORTH</h1>
@@ -18,9 +18,9 @@
     <main style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="display: flex; flex-direction: column; gap: 15px;">
             <label for="prompt" style="color: #a1a1aa;">Prompt</label>
-            <textarea id="prompt" placeholder="Enter a prompt..." style="width: 100%; height: 150px; background: #18181b; color: white; border: 1px solid #27272a; border-radius: 8px; padding: 10px; font-size: 1rem;"></textarea>
+            <textarea id="prompt" placeholder="Enter a prompt to evaluate..." style="width: 100%; height: 180px; background: #18181b; color: white; border: 1px solid #27272a; border-radius: 8px; padding: 15px; font-size: 1rem;"></textarea>
             
-            <button id="btnEvaluate" style="width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem;">Evaluate</button>
+            <button id="btnEvaluate" style="width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem;">Evaluate</button>
             
             <div id="statusRow" class="hidden" style="display: flex; align-items: center; gap: 8px; font-size: 0.875rem;">
                 <span id="statusText"></span>
@@ -31,12 +31,22 @@
                 API: <span id="apiLabel" style="color: #3b82f6;">Connecting...</span>
             </div>
             
-            <div id="errorBox" class="hidden" style="color: #ef4444; border: 1px solid #ef4444; padding: 10px; border-radius: 8px; background: rgba(127, 29, 29, 0.2);"></div>
+            <div id="errorBox" style="display: none; padding: 12px; background: rgba(127, 29, 29, 0.4); border: 1px solid #ef4444; color: #fca5a5; border-radius: 8px; font-size: 0.9rem;"></div>
 
             <div style="margin-top: 10px;">
                 <button id="aboutToggle" style="background: transparent; border: 1px solid #27272a; color: #a1a1aa; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.75rem;">About NORTH</button>
-                <div id="aboutContent" style="display: none; margin-top: 15px; color: #71717a; font-size: 0.85rem; line-height: 1.6; border-left: 2px solid #27272a; padding-left: 15px;">
-                    <p>NORTH is a model-agnostic layer that helps AI systems think more carefully. It evaluates prompts through structured human knowledge systems to reduce drift, overshoot, and blind agreement.</p>
+                <div id="aboutContent" style="display: none; margin-top: 15px; color: #71717a; font-size: 0.9rem; line-height: 1.6; border-left: 2px solid #3b82f6; padding-left: 15px;">
+                    <p>
+                        NORTH is a model-agnostic layer that helps AI systems think more carefully before responding.
+                        It evaluates prompts through a structured set of human knowledge systems — governance, science,
+                        philosophy, engineering and culture — applying a triadic constraint lens (I/R/Sem), a balanced
+                        five-note chord of perspectives, and a torsion check to reduce drift, overshoot, and blind agreement.
+                    </p>
+                    <p>
+                        Rather than replacing a model, NORTH sits between intent and output — adding tension, reflection,
+                        and structural accountability. It can work with different models and providers, acting as a
+                        navigational compass for responsible thought and handling.
+                    </p>
                 </div>
             </div>
         </div>
@@ -61,7 +71,6 @@
 
     <script src="script.js"></script>
     <script>
-        // About Section Toggle Logic
         document.getElementById("aboutToggle").addEventListener("click", function() {
             const content = document.getElementById("aboutContent");
             content.style.display = content.style.display === "none" ? "block" : "none";
