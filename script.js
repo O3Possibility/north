@@ -1,113 +1,126 @@
 /**
- * NORTH AI - Meticulous Multi-Engine Refactor
- * Synchronizes: Swappable AI (Mistral, GPT, Claude) & Structured Diagnostic Readout
+ * NORTH AI - UTCP Integration & Auditability Refactor
+ * Synchronizes: Physical I/R/Sem Scores + 5-Framework Prosaic Audit
  */
 
-const BACKEND_URL = "https://north-backend-kdgq.onrender.com/evaluate";
-
-// Global state for the active engine
+// 1. Configuration & State
+const BACKEND_URL = "https://north-backend-kdgq.onrender.com"; 
 let activeModel = "open-mistral-7b";
 
+// Helper for DOM access
+const el = (id) => document.getElementById(id);
+
 document.addEventListener("DOMContentLoaded", () => {
-    /**
-     * Engine Selector Logic
-     * Maps frontend spans to the backend model-routing keys
-     */
+    // Engine Selection Logic
     const options = document.querySelectorAll('.engine-option');
-    
     options.forEach(option => {
         option.addEventListener('click', () => {
-            // Updated: Removed the (LOCKED) check to allow swappability
             const modelKey = option.getAttribute('data-model');
             if (!modelKey) return;
 
-            // UI feedback for selection
             document.querySelector('.engine-option.active').classList.remove('active');
             option.classList.add('active');
 
-            // Update state
             activeModel = modelKey;
-            console.log(`NORTH: Routing to ${activeModel}`);
+            console.log(`NORTH: Logic routed to ${activeModel}`);
         });
     });
 
-    /**
-     * About Section Toggle
-     */
-    const aboutToggle = document.getElementById("aboutToggle");
-    const aboutContent = document.getElementById("aboutContent");
+    // About Toggle
+    const aboutToggle = el("aboutToggle");
+    const aboutContent = el("aboutContent");
     if (aboutToggle && aboutContent) {
-        aboutToggle.addEventListener("click", (e) => {
-            e.preventDefault();
-            aboutContent.classList.toggle("hidden");
-        });
+        aboutToggle.addEventListener("click", () => aboutContent.classList.toggle("hidden"));
     }
 });
 
 /**
  * Main Evaluation Engine
- * Processes the prompt through the selected router and formats the 4-Phase Audit
+ * Rips real scores from JSON and formats the 5-Framework Audit
  */
 async function evaluateGate() {
-    const promptField = document.getElementById("prompt");
-    const btn = document.getElementById("btnEvaluate");
-    const outputCard = document.getElementById("outputCard");
-    const output = document.getElementById("fmo");
-    const errorBox = document.getElementById("errorBox");
+    const promptField = el("prompt");
+    const btn = el("btnEvaluate");
+    const outputCard = el("outputCard");
+    const output = el("fmo");
+    const errorBox = el("errorBox");
 
-    // Block empty intents
     const userPrompt = promptField.value.trim();
     if (!userPrompt) return;
 
-    // 1. Enter Loading State
+    // Loading State
     btn.disabled = true;
     btn.classList.add("loading");
     outputCard.classList.add("hidden");
     errorBox.classList.add("hidden");
 
     try {
-        // 2. Transmit to Multi-Router Backend
-        const response = await fetch(BACKEND_URL, {
+        const response = await fetch(`${BACKEND_URL}/evaluate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 prompt: userPrompt,
-                model: activeModel 
+                model: activeModel,
+                // Ensure backend knows which provider to use for the math
+                provider: activeModel.includes("gpt") ? "openai" : (activeModel.includes("claude") ? "anthropic" : "mistral"),
+                model_name: activeModel
             })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            // 3. Structured Formatting for Phase Audit
-            const rawContent = data.fused_meaning_object || data.raw_text;
-            
-            // This regex-chain converts the backend structure into the Module Design
-            output.innerHTML = rawContent
-                // Phase 1: Frameworks
+            // 1. EXTRACT REAL MATH (No fabrication)
+            // Backend returns: scores: { I: float, R: float, Sem: float, rho: float }
+            const iScore = data.scores?.I ?? "0.00";
+            const rScore = data.scores?.R ?? "0.00";
+            const semScore = data.scores?.Sem ?? "0.00";
+            const torsion = data.scores?.rho ?? "0.00";
+
+            // 2. CONSTRUCT THE ADMISSIBILITY HEADER
+            const scoreHeader = `
+                <div class="score-readout">
+                    <div class="score-metric">
+                        <span class="score-label">INDICATIVE</span>
+                        <span class="score-value">${iScore}</span>
+                    </div>
+                    <div class="score-metric">
+                        <span class="score-label">RELATIONAL</span>
+                        <span class="score-value">${rScore}</span>
+                    </div>
+                    <div class="score-metric">
+                        <span class="score-label">SEMANTIC</span>
+                        <span class="score-value">${semScore}</span>
+                    </div>
+                    <div class="score-metric torsion">
+                        <span class="score-label">TORSION (ρ)</span>
+                        <span class="score-value">${(torsion * 100).toFixed(1)}%</span>
+                    </div>
+                </div>
+            `;
+
+            // 3. FORMAT PROSAIC AUDIT (Frameworks)
+            const rawContent = data.fused_meaning_object || data.raw_text || "";
+            const formattedAudit = rawContent
                 .replace(/### 1\. AUDITED FRAMEWORKS/g, '<div class="diagnostic-label">Phase 1: Framework Audit</div>')
-                // Phase 2: Triadic Mapping
-                .replace(/### 2\. CORE TRIAD MAPPING \(I\/R\/Sem\)/g, '<div class="diagnostic-label">Phase 2: Triadic Mapping</div>')
-                // Phase 3: Torsion Rating
+                .replace(/### 2\. CORE TRIAD MAPPING/g, '<div class="diagnostic-label">Phase 2: Triadic Mapping</div>')
                 .replace(/### 3\. TORSION SCORE/g, '<div class="diagnostic-label">Phase 3: Torsion Rating</div>')
-                // Phase 4: Diagnostic Summary
-                .replace(/### 4\. DIAGNOSTIC SUMMARY/g, '<div class="diagnostic-label">Phase 4: FMO Output</div>')
-                // Standard markdown cleanup
+                .replace(/### 4\. DIAGNOSTIC SUMMARY/g, '<div class="diagnostic-label">Phase 4: Diagnostic Summary</div>')
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\n/g, '<br>');
 
+            // 4. INJECT EVERYTHING
+            output.innerHTML = scoreHeader + formattedAudit;
             outputCard.classList.remove("hidden");
+
         } else {
-            // Handle HTTP errors or Backend Key failures
-            errorBox.textContent = `Engine Error: ${data.detail || "Verification sequence failed"}`;
+            errorBox.textContent = `Engine Refusal: ${data.detail || "Math constraints not met"}`;
             errorBox.classList.remove("hidden");
         }
     } catch (err) {
-        console.error("NORTH System Failure:", err);
-        errorBox.textContent = "Connectivity failure: Verify Render Backend Status.";
+        errorBox.textContent = "Connectivity failure: Backend is likely sleeping.";
         errorBox.classList.remove("hidden");
     } finally {
-        // 4. Exit Loading State
         btn.disabled = false;
         btn.classList.remove("loading");
     }
