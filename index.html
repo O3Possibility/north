@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="top-nav">
+        <button id="aboutToggle">About</button>
+    </div>
+
     <header>
         <div class="logo-group">
             <span id="statusDot"></span>
@@ -15,7 +19,7 @@
         <p class="subtitle">AI Admissibility Engine</p>
     </header>
 
-    <main>
+    <main class="centered-content">
         <div class="input-area">
             <textarea id="prompt" placeholder="Enter intent..."></textarea>
             
@@ -23,14 +27,11 @@
                 <button id="btnEvaluate" onclick="evaluateGate()" title="Evaluate Intent"></button>
             </div>
 
-            <div id="errorBox" class="hidden"></div>
-
-            <div class="about-section">
-                <button id="aboutToggle">About</button>
-                <div id="aboutContent" class="hidden">
-                    <p>NORTH is a model-agnostic layer that evaluates intent through governance, science, philosophy, engineering, and culture.</p>
-                </div>
+            <div id="aboutContent" class="hidden overlay">
+                <p>NORTH is a model-agnostic layer that evaluates intent through governance, science, philosophy, engineering, and culture — applying a triadic constraint lens (I/R/Sem) and torsion check to reduce drift.</p>
             </div>
+
+            <div id="errorBox" class="hidden"></div>
         </div>
 
         <section id="outputCard" class="hidden">
@@ -39,11 +40,5 @@
     </main>
 
     <script src="script.js"></script>
-    <script>
-        document.getElementById("aboutToggle").addEventListener("click", function() {
-            const content = document.getElementById("aboutContent");
-            content.classList.toggle("hidden");
-        });
-    </script>
 </body>
 </html>
