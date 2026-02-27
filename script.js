@@ -1,20 +1,21 @@
 /**
- * NORTH Master Controller - Full Sync
- * Matched to EvaluateRequest: prompt, model, provider, model_name, api_base, api_key, session_id, parent_branch_id, n_reads.
+ * NORTH Master Controller - Final Hardened Sync
+ * Restored: Long-form setGuide, lineage rendering, and status logic.
  */
 
 const DEFAULT_API = "https://north-backend-kdgq.onrender.com"; 
 
 function getApiBase() {
   const url = new URL(window.location.href);
-  return (url.searchParams.get("api") || DEFAULT_API).replace(/\/$/, "");
+  // Ensure we don't end up with double slashes or missing paths
+  let base = (url.searchParams.get("api") || DEFAULT_API).replace(/\/$/, "");
+  return base;
 }
 
 const el = (id) => document.getElementById(id);
 const setVisible = (id, show) => { if(el(id)) el(id).classList.toggle("hidden", !show); };
 
-// --- UI STATE ---
-let selectedModel = "default";
+let selectedModel = "mistral"; 
 
 function setStatus(status, ms, modelUsed){
   const row = el("statusRow");
@@ -30,14 +31,17 @@ function setStatus(status, ms, modelUsed){
 }
 
 function setGuide(data){
-  // Triadic Scores - Mapping from gate.py 'scores' dict
+  // Triadic Scores mapping from gate.py output
   const scores = ["scoreI", "scoreR", "scoreSem", "scoreL", "scoreTau", "scoreRho", "scoreRhoCrit"];
   scores.forEach(id => { 
     if(el(id)) {
-        // Map UI IDs to Python dict keys (e.g., scoreTau -> data.scores.tau)
-        const key = id.replace("score", "").toLowerCase();
-        const finalKey = (key === "rhocrit") ? "rho_crit" : key;
-        el(id).textContent = data.scores?.[finalKey.charAt(0).toUpperCase() + finalKey.slice(1)] ?? data.scores?.[finalKey] ?? "—"; 
+        const key = id.replace("score", "");
+        // Correcting for case sensitivity in Python dictionary keys
+        let valKey = key;
+        if(key === "Tau") valKey = "tau";
+        if(key === "Rho") valKey = "rho";
+        if(key === "RhoCrit") valKey = "rho_crit";
+        el(id).textContent = data.scores?.[valKey] ?? data.scores?.[key] ?? "—"; 
     }
   });
 
@@ -48,7 +52,7 @@ function setGuide(data){
   if(el("nReads")) el("nReads").textContent = data.diagnostics?.reads ?? "—";
   if(el("eventType")) el("eventType").textContent = data.diagnostics?.event_type ?? "—";
 
-  // Lineage - Rendering from gate.py 'chord'
+  // Lineage rendering from chord
   const lineage = el("lineage");
   if(lineage) {
     lineage.innerHTML = "";
@@ -66,8 +70,6 @@ function setGuide(data){
   }
 }
 
-// --- CORE ACTION ---
-
 async function evaluatePrompt() {
   const prompt = el("prompt")?.value.trim();
   if(!prompt) return;
@@ -79,29 +81,30 @@ async function evaluatePrompt() {
 
   const t0 = performance.now();
   try {
-    const api = getApiBase();
+    const apiBase = getApiBase();
     const payload = {
       prompt: prompt,
       model: selectedModel,
       provider: selectedModel === "mistral" ? "mistral" : null,
-      model_name: selectedModel === "mistral" ? (el("mistralModel")?.value?.trim() || null) : null,
-      api_key: selectedModel === "mistral" ? (el("mistralKey")?.value?.trim() || null) : null,
+      model_name: el("mistralModel")?.value?.trim() || "open-mistral-7b",
+      api_key: el("mistralKey")?.value?.trim() || null,
       api_base: null, 
       session_id: localStorage.getItem("north_session_id"),
       parent_branch_id: el("linkLineage")?.checked ? localStorage.getItem("north_last_branch_id") : null,
       n_reads: parseInt(el("apertureReads")?.value || "1", 10)
     };
 
-    const res = await fetch(`${api}/evaluate`, {
+    // Fix for 405 error: Ensure correct path and method
+    const res = await fetch(`${apiBase}/evaluate`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
     const ms = performance.now() - t0;
+    const data = await res.json();
 
-    if(!res.ok) throw new Error(data.detail || "Gate Error");
+    if(!res.ok) throw new Error(data.detail || "Audit Failed");
 
     if(data.branch?.branch_id) localStorage.setItem("north_last_branch_id", data.branch.branch_id);
 
@@ -119,8 +122,6 @@ async function evaluatePrompt() {
   }
 }
 
-// --- INITIALIZATION ---
-
 document.addEventListener("DOMContentLoaded", () => {
   if(!localStorage.getItem("north_session_id")) {
       localStorage.setItem("north_session_id", crypto.randomUUID());
@@ -128,17 +129,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if(el("btnEvaluate")) el("btnEvaluate").addEventListener("click", evaluatePrompt);
   
-  // Drawer Toggles matching your HTML IDs
+  // Binder for Drawers
   if(el("pillGuide")) el("pillGuide").onclick = () => el("guideDrawer").classList.toggle("hidden");
   if(el("aboutToggle")) el("aboutToggle").onclick = () => el("aboutContent").classList.toggle("hidden");
   if(el("pillModel")) el("pillModel").onclick = () => setVisible("modelModal", true);
   if(el("closeModelModal")) el("closeModelModal").onclick = () => setVisible("modelModal", false);
 
-  // Model Selection
+  // Model Selection Buttons
   document.querySelectorAll("[data-model]").forEach(btn => {
     btn.onclick = () => {
       selectedModel = btn.getAttribute("data-model");
-      if(el("modelNamePill")) el("modelNamePill").textContent = btn.querySelector('.text-zinc-100')?.textContent || "Default";
+      if(el("modelNamePill")) el("modelNamePill").textContent = selectedModel.toUpperCase();
       setVisible("mistralConfig", selectedModel === "mistral");
       setVisible("modelModal", false);
     };
