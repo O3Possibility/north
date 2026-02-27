@@ -4,7 +4,7 @@
     --border: #27272a;
     --text-main: #ffffff;
     --text-muted: #71717a;
-    --accent: #ffffff;
+    --accent: #ffffff; /* All non-black elements are white */
 }
 
 body {
@@ -28,10 +28,11 @@ header {
     gap: 12px;
 }
 
+/* Green is removed. Dot is now pure white to signal "Ready." */
 #statusDot {
     height: 8px;
     width: 8px;
-    background-color: #22c55e; /* Green for "Ready" */
+    background-color: var(--accent);
     border-radius: 50%;
 }
 
@@ -80,50 +81,48 @@ textarea:focus {
     margin-top: 15px;
 }
 
-/* Evaluate Button */
+/* Evaluate Button - The Mono-Circle:
+   We remove the padding, make the width and height equal, and set 
+   the border-radius to 50% to make it a perfect circle, not a pill.
+*/
 #btnEvaluate {
-    background: var(--accent);
-    color: black;
+    background: var(--accent); /* Pure white circle */
     border: none;
-    padding: 10px 24px;
-    border-radius: 20px;
+    width: 44px; /* Defined dimensions for circle */
+    height: 44px;
+    border-radius: 50%; /* Pure circle, no pill */
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
     display: flex;
     align-items: center;
-    min-width: 120px;
     justify-content: center;
-    transition: transform 0.1s;
+    transition: transform 0.1s, background-color 0.2s;
+    box-sizing: border-box;
+    padding: 0; /* Remove internal padding from pill version */
 }
 
-#btnEvaluate:active { transform: scale(0.98); }
-
-/* The 3-Dot Animation */
-.dots-container {
-    display: none; /* Hidden until loading */
-    gap: 4px;
+/* Feedback on press */
+#btnEvaluate:active:not(.loading) { 
+    transform: scale(0.92); 
+    background-color: #e0e0e0;
 }
 
-.dot {
-    width: 5px;
-    height: 5px;
-    background: black;
-    border-radius: 50%;
-    opacity: 0.2;
+/*
+   The loading animation itself. When the '.loading' class is added,
+   the white button blinks in a triplet rhythm (sequential fast pulses).
+   This avoids using dots or text for the loading state.
+*/
+#btnEvaluate.loading {
+    animation: triplet-blink 1.2s infinite; /* Sequential pulse animation */
 }
 
-/* Sequential 1, 2, 3 animation */
-.loading .dot {
-    animation: dot-pulse 1.4s infinite linear;
-}
-
-.loading .dot:nth-child(2) { animation-delay: 0.2s; }
-.loading .dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes dot-pulse {
-    0%, 100% { opacity: 0.2; }
-    50% { opacity: 1; }
+@keyframes triplet-blink {
+    /* Fast triplet pulses within a single cycle */
+    0%, 15% { background-color: var(--accent); }
+    20%, 35% { background-color: #52525b; } /* Triplet pulse 1 (Zinc gray) */
+    40%, 55% { background-color: var(--accent); }
+    60%, 75% { background-color: #52525b; } /* Triplet pulse 2 (Zinc gray) */
+    80%, 95% { background-color: var(--accent); }
+    100% { background-color: var(--accent); }
 }
 
 #fmo {
