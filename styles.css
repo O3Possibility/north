@@ -3,11 +3,8 @@
     --border: #27272a;
     --accent: #ffffff;
     --text-muted: #71717a;
-    --text-main: #e4e4e7;
-    --input-bg: #0c0c0e;
+    --text-bright: #e4e4e7;
 }
-
-* { box-sizing: border-box; }
 
 body {
     background-color: var(--bg);
@@ -17,10 +14,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
 }
 
-/* 1. Top Right Navigation */
+/* Header & Top Nav */
 .top-nav {
     width: 100%;
     display: flex;
@@ -29,120 +25,82 @@ body {
 }
 
 #aboutToggle {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    transition: color 0.2s;
+    background: transparent; border: none; color: var(--text-muted); cursor: pointer;
 }
 
-#aboutToggle:hover { color: var(--accent); }
-
-/* 2. Layout Hierarchy */
 header {
-    width: 100%;
-    max-width: 650px;
-    padding: 100px 20px 60px; /* 100px Drop */
+    width: 100%; max-width: 650px;
+    padding: 80px 20px 40px; /* Vertical drop */
 }
 
-.logo-group { display: flex; align-items: center; gap: 15px; }
-
-#statusDot {
-    height: 10px; width: 10px;
-    background-color: var(--accent);
-    border-radius: 50%;
-}
-
-h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: 3px; margin: 0; }
-
-.subtitle {
+/* Swappable AI Section */
+.engine-selector {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    font-size: 0.8rem;
-    margin: 10px 0 0 25px;
-    text-transform: uppercase;
 }
 
+.engine-option {
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+}
+
+.engine-option.active {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent);
+}
+
+/* Main Input Area */
 .centered-content {
-    width: 100%;
-    max-width: 650px;
-    padding: 0 20px;
+    width: 100%; max-width: 650px; padding: 0 20px;
 }
 
-/* 3. Input & Action Area */
 textarea {
-    width: 100%;
-    height: 180px;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 25px;
-    color: #fff;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    resize: none;
-    outline: none;
-    transition: border-color 0.2s;
+    width: 100%; height: 160px;
+    background: #09090b; border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px; color: #fff; font-size: 1rem;
+    resize: none; outline: none;
 }
-
-textarea:focus { border-color: #52525b; }
 
 .action-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 25px;
+    display: flex; justify-content: flex-end; margin-top: 20px;
 }
 
 #btnEvaluate {
-    width: 54px; height: 54px;
-    background: var(--accent);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
+    width: 44px; height: 44px; background: var(--accent);
+    border: none; border-radius: 50%; cursor: pointer;
 }
 
-/* Triplet Pulse Animation */
-.loading { animation: triplet-pulse 1.2s infinite ease-in-out; }
+/* Results Spacing (Fixes Messiness) */
+#outputCard {
+    margin-top: 80px;
+    width: 100%; max-width: 650px;
+    border-top: 1px solid var(--border);
+    padding: 40px 20px 100px;
+}
 
-@keyframes triplet-pulse {
+#fmo {
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 0.9rem; line-height: 1.8; color: var(--text-bright);
+    white-space: pre-wrap;
+}
+
+/* Typography for FMO Headers */
+#fmo h3 {
+    font-size: 0.8rem; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin: 40px 0 15px;
+}
+
+.hidden { display: none !important; }
+
+/* Loading Animation */
+.loading { animation: triplet-blink 1.2s infinite ease-in-out; }
+@keyframes triplet-blink {
     0%, 20% { opacity: 1; }
     30%, 50% { opacity: 0.2; }
     60%, 80% { opacity: 1; }
     90%, 100% { opacity: 0.2; }
 }
-
-/* 4. Output & Result Formatting */
-.about-box {
-    margin-top: 30px;
-    padding: 25px;
-    border-left: 2px solid var(--border);
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.8;
-}
-
-#outputCard {
-    margin-top: 100px; /* Vertical split for output */
-    width: 100%;
-    border-top: 1px solid var(--border);
-    padding-top: 60px;
-    padding-bottom: 100px;
-}
-
-#fmo {
-    font-family: "SF Mono", "Fira Code", monospace;
-    font-size: 0.95rem;
-    line-height: 1.8;
-    color: var(--text-main);
-    white-space: pre-wrap; /* Critical for I/R/Sem formatting */
-}
-
-#errorBox {
-    margin-top: 30px;
-    color: #fca5a5;
-    font-family: monospace;
-    font-size: 0.9rem;
-}
-
-.hidden { display: none !important; }
