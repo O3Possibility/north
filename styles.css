@@ -1,104 +1,123 @@
-
-body{
-  margin:0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background:#000;
-  color:#fff;
+:root {
+    --bg: #ffffff;
+    --text: #000000;
+    --accent: #000000;
+    --border: #e0e0e0;
 }
 
-.site-header{
-  position:sticky;
-  top:0;
-  padding:20px 24px;
-  backdrop-filter: blur(8px);
-  background: rgba(0,0,0,0.85);
-  border-bottom:1px solid rgba(255,255,255,0.08);
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    margin: 0;
 }
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
+.container {
+    width: 100%;
+    max-width: 600px;
 }
 
-.dot{
-  width:10px;
-  height:10px;
-  background:#6EC1FF;
-  border-radius:50%;
+h1 {
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
 }
 
-.brand-text{
-  font-size:22px;
-  font-weight:600;
-  letter-spacing:0.12em;
+/* Form Styling */
+.input-group {
+    margin-bottom: 24px;
 }
 
-.tagline{
-  font-size:12px;
-  color:rgba(255,255,255,0.6);
-  margin-top:4px;
+label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0.6;
 }
 
-.main-content{
-  padding:40px 24px 120px 24px;
-  max-width:800px;
-  margin:0 auto;
+textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    padding: 12px;
+    font-size: 16px;
+    resize: none;
+    border-radius: 4px;
+    transition: border-color 0.2s;
 }
 
-.prompt-card{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+textarea:focus {
+    outline: none;
+    border-color: var(--accent);
 }
 
-textarea{
-  min-height:120px;
-  background:#111;
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px;
-  padding:12px;
-  color:#fff;
+/* The Evaluate Button & Dot Animation */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 12px;
 }
 
-.primary-btn{
-  background:#fff;
-  color:#000;
-  border:none;
-  padding:12px;
-  border-radius:10px;
-  font-weight:600;
+button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    font-weight: 600;
+    border-radius: 20px; /* Modern pill shape */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: opacity 0.2s;
 }
 
-.about-pill{
-  margin-top:40px;
+button:hover {
+    opacity: 0.8;
 }
 
-.about-toggle{
-  background:none;
-  border:1px solid rgba(110,193,255,0.4);
-  color:#6EC1FF;
-  padding:8px 16px;
-  border-radius:20px;
-  cursor:pointer;
+.dots-container {
+    display: none; /* Hidden by default */
+    gap: 4px;
 }
 
-.about-content{
-  display:none;
-  margin-top:16px;
-  font-size:14px;
-  line-height:1.6;
-  color:rgba(255,255,255,0.75);
+.dot {
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: 0.3;
 }
 
-.site-footer{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  text-align:center;
-  padding:10px;
-  font-size:11px;
-  color:rgba(255,255,255,0.3);
-  background:rgba(0,0,0,0.9);
+/* 1, 2, 3 sequence animation */
+.loading .dot {
+    animation: dot-flash 1.2s infinite linear;
 }
+
+.loading .dot:nth-child(2) { animation-delay: 0.2s; }
+.loading .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-flash {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* Output Area */
+#fmo {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Hide footer/technical URL */
+footer { display: none; }
