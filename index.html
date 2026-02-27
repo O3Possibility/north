@@ -10,8 +10,7 @@
 
 <header class="site-header">
   <div class="brand">
-    <span class="dot"></span>
-    <span class="brand-text">NORTH</span>
+    <span id="statusDot" class="dot"></span> <span class="brand-text">NORTH</span>
   </div>
   <div class="tagline">AI Admissibility Engine</div>
 </header>
@@ -21,38 +20,66 @@
   <section class="tool-section">
     <div class="prompt-card">
       <label>Prompt</label>
-      <textarea placeholder="Enter a prompt to evaluate..."></textarea>
-      <button class="primary-btn">Evaluate</button>
+      <textarea id="prompt" placeholder="Enter a prompt to evaluate..."></textarea>
+      <button id="btnEvaluate" class="primary-btn">Evaluate</button>
     </div>
+
+    <div id="statusRow" class="hidden" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+      <span id="statusText" style="color: white; font-size: 0.875rem;">—</span>
+      <span id="timingText" style="color: #71717a; font-size: 0.75rem;"></span>
+    </div>
+
+    <div style="margin-top: 8px; font-size: 0.75rem; color: #71717a;">
+      API: <span id="apiLabel"></span>
+    </div>
+    <div id="warmNote" style="font-size: 0.75rem; color: #71717a; margin-top: 4px;"></div>
+    <div id="errorBox" class="hidden" style="color: #ef4444; border: 1px solid #ef4444; padding: 8px; margin-top: 8px; border-radius: 4px;"></div>
 
     <div class="about-pill">
       <button class="about-toggle">About NORTH</button>
       <div class="about-content">
-        <p>
-        NORTH is a model-agnostic layer that helps AI systems think more carefully before responding.
-        It evaluates prompts through a structured set of human knowledge systems — governance, science,
-        philosophy, engineering and culture — applying a triadic constraint lens (I/R/Sem), a balanced
-        five-note chord of perspectives, and a torsion check to reduce drift, overshoot, and blind agreement.
-        </p>
-        <p>
-        Rather than replacing a model, NORTH sits between intent and output — adding tension, reflection,
-        and structural accountability. It can work with different models and providers, acting as a
-        navigational compass for responsible thought and handling.
-        </p>
+        <p>NORTH is a model-agnostic layer that helps AI systems think more carefully before responding...</p>
       </div>
     </div>
+  </section>
 
+  <section id="outputCard" class="hidden" style="margin-top: 20px; border-top: 1px solid #27272a; padding-top: 20px;">
+    <div id="fmo" style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; color: white;"></div>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button id="pillGuide" class="secondary-btn">View Analysis</button>
+        <button id="pillModel" class="secondary-btn">Model: <span id="modelNamePill">Default</span></button>
+    </div>
+  </section>
+
+  <section id="guideDrawer" class="hidden" style="margin-top: 20px; background: #000; padding: 15px; border: 1px solid #18181b; border-radius: 12px;">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+        <div>I: <span id="scoreI"></span></div>
+        <div>R: <span id="scoreR"></span></div>
+        <div>Sem: <span id="scoreSem"></span></div>
+        <div>L: <span id="scoreL"></span></div>
+        <div>τ: <span id="scoreTau"></span></div>
+        <div>ρ: <span id="scoreRho"></span></div>
+    </div>
+    <div id="lineage" style="display: flex; flex-direction: column; gap: 8px;"></div>
   </section>
 
 </main>
 
+<div id="modelModal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 50;">
+    <div style="background: #000; border: 1px solid #27272a; padding: 20px; border-radius: 12px; max-width: 400px; width: 90%;">
+        <h3 style="color: white; margin-bottom: 15px;">Select Model</h3>
+        <button data-model="default" style="display: block; width: 100%; text-align: left; padding: 10px; color: white;">Default</button>
+        <button data-model="mistral" style="display: block; width: 100%; text-align: left; padding: 10px; color: white;">Mistral</button>
+        <button id="closeModelModal" style="margin-top: 15px; color: #71717a;">Close</button>
+    </div>
+</div>
+
 <footer class="site-footer">
-  <div class="footer-slug">
-    NORTH | Navigational Orientation for Responsible Thought &amp; Handling
-  </div>
+  <div class="footer-slug">NORTH | Navigational Orientation for Responsible Thought & Handling</div>
 </footer>
 
-<script>
+<script src="script.js"></script> <script>
+// Keep your existing about toggle
 document.querySelector(".about-toggle").addEventListener("click", function(){
   const content = document.querySelector(".about-content");
   content.style.display = content.style.display === "block" ? "none" : "block";
