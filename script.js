@@ -1,140 +1,110 @@
 /**
- * NORTH AI - UTCP MASTER CONTROL
- * Synchronizes: Physical I/R/Sem Scores + 5-Framework Prosaic Audit
- * version: 0.5.1-pressure-sync
+ * NORTH AI - UTCP SYNCHRONIZED CONTROL
+ * Version: 0.5.2-lineage-sync
+ * Links Physical I/R/Sem Scores with the chord-based lineage backend.
  */
 
 // 1. Configuration & Global State
 const BACKEND_URL = "https://north-backend-kdgq.onrender.com"; 
-let activeModel = "open-mistral-7b";
+let selectedModel = "default";
 
 // Helper for DOM access
 const el = (id) => document.getElementById(id);
+const setVisible = (id, show) => { const n = el(id); if(n) n.classList.toggle("hidden", !show); };
 
 /**
- * Initialization: Setup UI Listeners
+ * Initialization: Setup UI Listeners & Session Tracking
  */
 document.addEventListener("DOMContentLoaded", () => {
-    // Engine Selector: Logic for switching between Mistral, GPT, and Claude
-    const options = document.querySelectorAll('.engine-option');
-    options.forEach(option => {
-        option.addEventListener('click', () => {
-            const modelKey = option.getAttribute('data-model');
-            if (!modelKey) return;
+    // Session Management
+    if (!localStorage.getItem("north_session_id")) {
+        const sessId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `sess_${Date.now()}`;
+        localStorage.setItem("north_session_id", sessId);
+    }
 
-            // UI Update: Toggle active state on buttons
-            document.querySelectorAll('.engine-option').forEach(opt => opt.classList.remove('active'));
-            option.classList.add('active');
-
-            // State Update
-            activeModel = modelKey;
-            console.log(`NORTH: System routing updated to ${activeModel}`);
+    // Engine Selection Logic (Modal System from index 2.html)
+    document.querySelectorAll("[data-model]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            selectedModel = btn.getAttribute("data-model");
+            const label = selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1);
+            if (el("modelNamePill")) el("modelNamePill").textContent = label;
+            setVisible("modelModal", false);
         });
     });
 
-    // About/System Info Toggle
-    const aboutToggle = el("aboutToggle");
-    const aboutContent = el("aboutContent");
-    if (aboutToggle && aboutContent) {
-        aboutToggle.addEventListener("click", (e) => {
-            e.preventDefault();
-            aboutContent.classList.toggle("hidden");
-        });
-    }
+    // Toggle Listeners
+    if (el("pillGuide")) el("pillGuide").addEventListener("click", () => setVisible("guideDrawer", el("guideDrawer").classList.contains("hidden")));
+    if (el("pillModel")) el("pillModel").addEventListener("click", () => setVisible("modelModal", true));
+    if (el("closeModelModal")) el("closeModelModal").addEventListener("click", () => setVisible("modelModal", false));
 });
 
 /**
  * Main Evaluation Engine
- * Communicates with the FastAPI backend, parses the dual-channel response (JSON + Text),
- * and renders the hardware-style diagnostic dashboard.
+ * Maps response data to the complex "Guide" drawer and the Fused Meaning Object.
  */
 async function evaluateGate() {
-    const promptField = el("prompt");
-    const btn = el("btnEvaluate");
-    const outputCard = el("outputCard");
-    const output = el("fmo");
-    const errorBox = el("errorBox");
+    const prompt = el("prompt").value.trim();
+    if (!prompt) return;
 
-    const userPrompt = promptField.value.trim();
-    if (!userPrompt) return;
-
-    // 1. Enter Loading State
-    btn.disabled = true;
-    btn.classList.add("loading");
-    outputCard.classList.add("hidden");
-    errorBox.classList.add("hidden");
+    // UI Reset
+    setVisible("outputCard", false);
+    setVisible("errorBox", false);
+    el("btnEvaluate").classList.add("loading");
+    el("btnEvaluate").disabled = true;
 
     try {
-        // 2. Transmit to Multi-Router Backend
         const response = await fetch(`${BACKEND_URL}/evaluate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
-                prompt: userPrompt,
-                model: activeModel 
+                prompt: prompt,
+                model: selectedModel,
+                session_id: localStorage.getItem("north_session_id"),
+                parent_branch_id: localStorage.getItem("north_last_branch_id"),
+                n_reads: parseInt(el("apertureReads")?.value || "1")
             })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            // 3. Extract Real Math from JSON (Provided by backend regex parser)
-            const iScore = data.scores?.I ?? "0.00";
-            const rScore = data.scores?.R ?? "0.00";
-            const semScore = data.scores?.Sem ?? "0.00";
-            const torsion = data.scores?.rho ?? 0;
+            // 1. Update Persistent Lineage
+            if (data.branch?.branch_id) localStorage.setItem("north_last_branch_id", data.branch.branch_id);
 
-            // 4. Construct the Dashboard Header (Numeric Channel)
+            // 2. Inject I/R/Sem Dashboard (Top Level)
             const scoreHeader = `
-                <div class="score-readout">
-                    <div class="score-metric">
-                        <span class="score-label">INDICATIVE</span>
-                        <span class="score-value">${iScore}</span>
-                    </div>
-                    <div class="score-metric">
-                        <span class="score-label">RELATIONAL</span>
-                        <span class="score-value">${rScore}</span>
-                    </div>
-                    <div class="score-metric">
-                        <span class="score-label">SEMANTIC</span>
-                        <span class="score-value">${semScore}</span>
-                    </div>
-                    <div class="score-metric torsion">
-                        <span class="score-label">TORSION (ρ)</span>
-                        <span class="score-value">${(torsion * 100).toFixed(1)}%</span>
-                    </div>
-                </div>
-            `;
+                <div class="grid grid-cols-4 gap-4 mb-6 bg-black/40 p-4 rounded-xl border border-zinc-900">
+                    <div class="text-center"><div class="text-[10px] text-zinc-500 uppercase">Indicative</div><div class="text-lg font-mono">${data.scores?.I ?? "—"}</div></div>
+                    <div class="text-center"><div class="text-[10px] text-zinc-500 uppercase">Relational</div><div class="text-lg font-mono">${data.scores?.R ?? "—"}</div></div>
+                    <div class="text-center"><div class="text-[10px] text-zinc-500 uppercase">Semantic</div><div class="text-lg font-mono">${data.scores?.Sem ?? "—"}</div></div>
+                    <div class="text-center text-red-500"><div class="text-[10px] text-zinc-400 uppercase">Torsion</div><div class="text-lg font-mono">${(data.scores?.rho * 100 || 0).toFixed(1)}%</div></div>
+                </div>`;
 
-            // 5. Format the Prosaic Audit (Textual Channel)
-            const rawContent = data.fused_meaning_object || data.raw_text || "";
-            const formattedAudit = rawContent
-                // Map Phase Headers to custom CSS labels
-                .replace(/### 1\. AUDITED FRAMEWORKS/g, '<div class="diagnostic-label">Phase 1: Framework Audit</div>')
-                .replace(/### 2\. CORE TRIAD MAPPING/g, '<div class="diagnostic-label">Phase 2: Triadic Mapping</div>')
-                .replace(/### 3\. TORSION SCORE/g, '<div class="diagnostic-label">Phase 3: Torsion Rating</div>')
-                .replace(/### 4\. DIAGNOSTIC SUMMARY/g, '<div class="diagnostic-label">Phase 4: Diagnostic Summary</div>')
-                // Cleanup Markdown
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // 3. Format Audit Text
+            const body = (data.fused_meaning_object || data.raw_text || "")
+                .replace(/### (.*?)\n/g, '<div class="text-xs font-bold text-white uppercase mt-4 mb-2 tracking-widest border-l-2 border-white pl-2">$1</div>')
                 .replace(/\n/g, '<br>');
 
-            // 6. Injection
-            output.innerHTML = scoreHeader + formattedAudit;
-            outputCard.classList.remove("hidden");
+            el("fmo").innerHTML = scoreHeader + body;
 
+            // 4. Populate Hidden Guide Drawer (Legacy Metadata Sync)
+            if (el("scoreI")) {
+                el("scoreI").textContent = data.scores?.I ?? "—";
+                el("scoreR").textContent = data.scores?.R ?? "—";
+                el("scoreSem").textContent = data.scores?.Sem ?? "—";
+                el("scoreRho").textContent = data.scores?.rho ?? "—";
+                el("branchId").textContent = data.branch?.branch_id ?? "—";
+            }
+
+            setVisible("outputCard", true);
         } else {
-            // Handle Backend Logic Errors
-            errorBox.textContent = `Engine Refusal: ${data.detail || "Validation failed"}`;
-            errorBox.classList.remove("hidden");
+            throw new Error(data.detail || "Engine Refusal");
         }
     } catch (err) {
-        // Handle Connectivity/Server Sleep Errors
-        console.error("NORTH System Error:", err);
-        errorBox.textContent = "Connectivity failure: Backend instance may be waking up. Retry in 30s.";
-        errorBox.classList.remove("hidden");
+        el("errorBox").textContent = `System Error: ${err.message}`;
+        setVisible("errorBox", true);
     } finally {
-        // 7. Exit Loading State
-        btn.disabled = false;
-        btn.classList.remove("loading");
+        el("btnEvaluate").classList.remove("loading");
+        el("btnEvaluate").disabled = false;
     }
 }
