@@ -1,35 +1,50 @@
-const DEFAULT_API = "https://north-backend-kdgq.onrender.com"; 
+/**
+ * NORTH Master Controller - Final Hardened Logic
+ * Target: https://north-backend-kdgq.onrender.com/evaluate/
+ */
+
+const API_URL = "https://north-backend-kdgq.onrender.com/evaluate/"; 
 
 const el = (id) => document.getElementById(id);
 const setVisible = (id, show) => { if(el(id)) el(id).classList.toggle("hidden", !show); };
 
-let selectedModel = "mistral"; 
+let selectedModel = "mistral";
 
 function setStatus(status, ms, modelUsed){
   if(el("statusRow")) { el("statusRow").classList.remove("hidden"); el("statusRow").classList.add("flex"); }
   if(el("statusText")) el("statusText").textContent = status || "—";
-  if(el("timingText")) el("timingText").textContent = ms ? `· ${Math.round(ms)}ms${modelUsed ? ` · ${modelUsed}` : ""}` : "";
-  if(el("statusDot")) el("statusDot").className = "h-2 w-2 rounded-full " + (status === "ADMISSIBLE" ? "bg-white" : "bg-red-500");
+  if(el("timingText")) el("timingText").textContent = ms ? `· ${Math.round(ms)}ms · ${modelUsed}` : "";
+  if(el("statusDot")) {
+    el("statusDot").style.backgroundColor = (status === "ADMISSIBLE" ? "#fff" : status === "REFUSAL" ? "#ef4444" : "#52525b");
+  }
 }
 
 function setGuide(data){
-  // Map scores from gate.py output
-  const mapping = { scoreI:"I", scoreR:"R", scoreSem:"Sem", scoreL:"L", scoreTau:"tau", scoreRho:"rho", scoreRhoCrit:"rho_crit" };
-  Object.entries(mapping).forEach(([id, key]) => { if(el(id)) el(id).textContent = data.scores?.[key] ?? "—"; });
+  // Map Triadic Scores from gate.py
+  const s = data.scores || {};
+  const mapping = { 
+    scoreI: s.I, scoreR: s.R, scoreSem: s.Sem, scoreL: s.L, 
+    scoreTau: s.tau, scoreRho: s.rho, scoreRhoCrit: s.rho_crit 
+  };
+  Object.entries(mapping).forEach(([id, val]) => { if(el(id)) el(id).textContent = val ?? "—"; });
 
-  if(el("branchId")) el("branchId").textContent = data.branch?.branch_id ?? "—";
+  // Map Diagnostics
+  if(el("eventType")) el("eventType").textContent = data.diagnostics?.event_type ?? "—";
   if(el("nReads")) el("nReads").textContent = data.diagnostics?.reads ?? "1";
+  if(el("branchId")) el("branchId").textContent = data.branch?.branch_id ?? "—";
 
-  // Render Lineage
+  // Map Framework Chord (The Core Engine)
   const lineage = el("lineage");
-  if(lineage) {
+  if(lineage && data.chord) {
     lineage.innerHTML = "";
-    const items = [data.chord?.tonic, ...(data.chord?.ballasts || [])].filter(Boolean);
+    const items = [data.chord.tonic, ...(data.chord.ballasts || [])].filter(Boolean);
     items.forEach((item, i) => {
-      lineage.innerHTML += `<div class="p-3 mb-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
-        <div class="text-[9px] uppercase text-zinc-500">${i === 0 ? 'Tonic' : 'Ballast'}</div>
-        <div class="text-sm text-zinc-200">${item.meta?.Framework_Name || "—"}</div>
-      </div>`;
+      lineage.innerHTML += `
+        <div class="p-3 mb-2 bg-zinc-900/80 border border-zinc-800 rounded-lg">
+          <div class="text-[9px] uppercase text-zinc-500">${i === 0 ? 'Tonic' : 'Ballast ' + i}</div>
+          <div class="text-[11px] text-zinc-100 font-medium">${item.meta?.Framework_Name || "Unknown"}</div>
+          <div class="text-[9px] text-zinc-600">${item.meta?.Macro_Region || "—"} · ${item.meta?.Lineage_Cluster || "—"}</div>
+        </div>`;
     });
   }
 }
@@ -41,7 +56,7 @@ async function evaluatePrompt() {
   el("btnEvaluate").disabled = true;
   setVisible("outputCard", false);
   setVisible("errorBox", false);
-  setStatus("EVALUATING...", 0);
+  setStatus("EVALUATING...", 0, "...");
 
   try {
     const payload = {
@@ -52,48 +67,56 @@ async function evaluatePrompt() {
       api_key: el("mistralKey")?.value?.trim() || null,
       session_id: localStorage.getItem("north_session_id"),
       parent_branch_id: el("linkLineage")?.checked ? localStorage.getItem("north_last_branch_id") : null,
-      n_reads: parseInt(el("apertureReads")?.value || "1")
+      n_reads: parseInt(el("apertureReads")?.value || "1", 10)
     };
 
     const t0 = performance.now();
-    // Force trailing slash to match Python's stricter path
-    const res = await fetch(`${DEFAULT_API}/evaluate/`, {
+    const res = await fetch(API_URL, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.detail || "Server Error");
+    if(!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Gate Error");
+    }
 
-    localStorage.setItem("north_last_branch_id", data.branch?.branch_id);
-    setStatus(data.status, performance.now() - t0, data.model_used);
-    if(el("fmo")) el("fmo").textContent = data.fused_meaning_object || data.raw_text;
+    const data = await res.json();
+    const ms = performance.now() - t0;
+
+    if(data.branch?.branch_id) localStorage.setItem("north_last_branch_id", data.branch.branch_id);
+
+    setStatus(data.status, ms, data.model_used);
+    if(el("fmo")) el("fmo").textContent = data.fused_meaning_object || data.raw_text || "—";
     setGuide(data);
     setVisible("outputCard", true);
 
   } catch(e) {
-    if(el("errorBox")) el("errorBox").textContent = `CONNECTION FAILED: ${e.message}`;
-    setVisible("errorBox", true);
-    setStatus("ERROR", 0);
+    if(el("errorBox")) {
+        el("errorBox").textContent = `AUDIT_FAILED: ${e.message}`;
+        setVisible("errorBox", true);
+    }
+    setStatus("ERROR", 0, "N/A");
   } finally {
     el("btnEvaluate").disabled = false;
   }
 }
 
+// Initializer
 document.addEventListener("DOMContentLoaded", () => {
   if(!localStorage.getItem("north_session_id")) localStorage.setItem("north_session_id", crypto.randomUUID());
-  el("btnEvaluate")?.addEventListener("click", evaluatePrompt);
+  if(el("btnEvaluate")) el("btnEvaluate").onclick = evaluatePrompt;
   
-  // Toggles
-  el("pillGuide").onclick = () => el("guideDrawer").classList.toggle("hidden");
-  el("pillModel").onclick = () => setVisible("modelModal", true);
-  el("closeModelModal").onclick = () => setVisible("modelModal", false);
+  if(el("pillGuide")) el("pillGuide").onclick = () => el("guideDrawer").classList.toggle("hidden");
+  if(el("pillModel")) el("pillModel").onclick = () => setVisible("modelModal", true);
+  if(el("closeModelModal")) el("closeModelModal").onclick = () => setVisible("modelModal", false);
 
   document.querySelectorAll("[data-model]").forEach(btn => {
     btn.onclick = () => {
       selectedModel = btn.getAttribute("data-model");
       if(el("modelNamePill")) el("modelNamePill").textContent = selectedModel.toUpperCase();
+      setVisible("mistralConfig", selectedModel === "mistral");
       setVisible("modelModal", false);
     };
   });
