@@ -9,6 +9,19 @@
         .hidden { display:none; }
         .engine-option.active { border-bottom:1px solid #fff; color:#fff !important; }
         textarea:focus { outline:none; border-color:#444 !important; }
+        
+        /* --- PULSE ANIMATION --- */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.98); }
+        }
+        .processing-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+            cursor: wait !important;
+            pointer-events: none;
+            background: #27272a !important;
+            color: #a1a1aa !important;
+        }
     </style>
 </head>
 <body>
@@ -58,7 +71,7 @@
                 <label for="linkLineage" style="font-size:10px; color:#444;">LINK_TO_PREVIOUS_BRANCH</label>
             </div>
 
-            <button id="btnEvaluate" style="width:100%; margin-top:15px; padding:15px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; letter-spacing:1px;">INITIATE AUDIT</button>
+            <button id="btnEvaluate" style="width:100%; margin-top:15px; padding:15px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; letter-spacing:1px; transition: 0.2s;">INITIATE AUDIT</button>
             <div id="warmNote" style="margin-top:10px; font-size:10px; color:#666;">Free-tier note: first request may take 10–30s on a cold start.</div>
             <div id="errorBox" class="hidden" style="margin-top:20px; color:#f44; font-size:12px; border:1px solid #411; padding:10px; background:#200;"></div>
         </div>
@@ -72,33 +85,31 @@
 
             <div style="margin-bottom:30px;">
                 <div style="font-size:10px; color:#444; text-transform:uppercase; margin-bottom:10px; letter-spacing:1px;">Fused Meaning Object</div>
-                <pre id="fmo" style="line-height:1.6; font-size:14px; color:#ccc; background:#0a0a0a; padding:20px; border-radius:8px; border:1px solid #222; white-space:pre-wrap; font-family:serif;"></pre>
+                <div id="fmo" style="line-height:1.6; font-size:14px; color:#ccc; background:#0a0a0a; padding:20px; border-radius:8px; border:1px solid #222; white-space:pre-wrap; font-family:serif;"></div>
             </div>
 
-            <button id="pillGuide" style="background:none; border:1px solid #333; color:#666; font-size:10px; cursor:pointer; padding:5px 10px; margin-bottom:15px;">OPEN_GUIDE</button>
-            
-            <div id="guideDrawer" class="hidden" style="background:#050505; border:1px solid #222; padding:20px; border-radius:8px; margin-bottom:40px;">
+            <div id="guideDrawer" style="background:#050505; border:1px solid #222; padding:20px; border-radius:8px; margin-bottom:60px;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
                     <div>
-                        <div style="font-size:10px; color:#444; text-transform:uppercase; border-bottom:1px solid #222; padding-bottom:5px;">Metrics</div>
+                        <div style="font-size:10px; color:#444; text-transform:uppercase; border-bottom:1px solid #222; padding-bottom:5px; letter-spacing:1px;">Audit Metrics</div>
                         <div style="margin-top:15px; font-size:12px; color:#aaa; line-height:1.8; font-family:monospace;">
                             <div>I (Indicative): <span id="scoreI" style="color:#eee;">—</span></div>
                             <div>R (Relational): <span id="scoreR" style="color:#eee;">—</span></div>
                             <div>Sem (Semantic): <span id="scoreSem" style="color:#eee;">—</span></div>
                             <div style="margin:10px 0; border-top:1px solid #111;"></div>
-                            <div>L (Logic): <span id="scoreL">—</span></div>
-                            <div>τ (Threshold): <span id="scoreTau">—</span></div>
-                            <div>ρ (Torsion): <span id="scoreRho">—</span></div>
-                            <div>ρcrit: <span id="scoreRhoCrit">—</span></div>
+                            <div>L (Logic): <span id="scoreL" style="color:#eee;">—</span></div>
+                            <div>τ (Threshold): <span id="scoreTau" style="color:#eee;">—</span></div>
+                            <div>ρ (Torsion): <span id="scoreRho" style="color:#eee;">—</span></div>
+                            <div>ρcrit: <span id="scoreRhoCrit" style="color:#eee;">—</span></div>
                         </div>
                     </div>
                     <div>
-                        <div style="font-size:10px; color:#444; text-transform:uppercase; border-bottom:1px solid #222; padding-bottom:5px;">Lineage</div>
+                        <div style="font-size:10px; color:#444; text-transform:uppercase; border-bottom:1px solid #222; padding-bottom:5px; letter-spacing:1px;">Lineage</div>
                         <div id="lineage" style="margin-top:15px;"></div>
-                        <div style="margin-top:20px; font-size:10px; color:#333; line-height:1.5;">
-                            <div>BRANCH_ID: <span id="branchId">—</span></div>
-                            <div>PARENT_ID: <span id="parentBranchId">—</span></div>
-                            <div>DEPTH: <span id="branchDepth">—</span></div>
+                        <div style="margin-top:20px; font-size:10px; color:#333; line-height:1.5; font-family:monospace;">
+                            <div>BRANCH_ID: <span id="branchId" style="color:#666;">—</span></div>
+                            <div>PARENT_ID: <span id="parentBranchId" style="color:#666;">—</span></div>
+                            <div>DEPTH: <span id="branchDepth" style="color:#666;">—</span></div>
                         </div>
                     </div>
                 </div>
