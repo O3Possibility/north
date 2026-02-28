@@ -1,6 +1,6 @@
 /**
  * NORTH MASTER CONTROLLER
- * Full Integration: Markdown + Lineage Fix + Pulse Animation
+ * Permanent Audit Display Mode
  */
 
 const API_URL = "https://north-backend-kdgq.onrender.com/evaluate/"; 
@@ -10,10 +10,6 @@ const setVisible = (id, show) => { if(el(id)) el(id).classList.toggle("hidden", 
 
 let selectedModel = "mistral"; 
 
-/**
- * MARKDOWN FORMATTER
- * Converts ### and ** into visual hierarchy for the FMO report.
- */
 function formatMarkdown(text) {
   if (!text) return "";
   return text
@@ -30,10 +26,6 @@ function setStatus(status, ms, modelUsed){
   if(dot) dot.style.backgroundColor = (status === "ADMISSIBLE" ? "#fff" : status === "REFUSAL" ? "#ef4444" : "#52525b");
 }
 
-/**
- * THE GUIDE & LINEAGE DRAWER
- * Populates the side drawer with framework names and 3-decimal precision scores.
- */
 function setGuide(data){
   const s = data.scores || {};
   const mapping = { 
@@ -61,30 +53,23 @@ function setGuide(data){
       const frameId = item.id || "N/A";
 
       lineage.innerHTML += `
-        <div style="padding:12px; margin-bottom:10px; background:#111; border:1px solid #222; border-radius:4px; border-left: 3px solid ${i === 0 ? '#fff' : '#444'};">
-          <div style="font-size:9px; color:#666; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${i === 0 ? 'Tonic' : 'Ballast'}</div>
+        <div style="padding:12px; margin-bottom:10px; background:#000; border:1px solid #222; border-radius:4px; border-left: 3px solid ${i === 0 ? '#fff' : '#444'};">
+          <div style="font-size:9px; color:#444; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${i === 0 ? 'Tonic' : 'Ballast'}</div>
           <div style="font-size:12px; color:#eee; font-weight:500;">${frameName}</div>
-          <div style="font-size:9px; color:#444; margin-top:4px;">ID: ${frameId}</div>
+          <div style="font-size:9px; color:#333; margin-top:4px;">ID: ${frameId}</div>
         </div>`;
     });
   }
 }
 
-/**
- * CORE EVALUATION LOOP
- * Includes the Pulse Animation triggers.
- */
 async function evaluatePrompt() {
   const prompt = el("prompt")?.value.trim();
-  const apiKey = el("mistralKey")?.value?.trim(); 
   const btn = el("btnEvaluate");
-  
   if(!prompt || !btn) return;
 
-  // 1. START PROCESSING STATE
   btn.disabled = true;
-  btn.classList.add("processing-pulse"); // Trigger CSS Animation
-  btn.textContent = "AUDITING SYSTEM..."; // Visual feedback
+  btn.classList.add("processing-pulse");
+  btn.textContent = "AUDITING...";
 
   setVisible("outputCard", false);
   setVisible("errorBox", false);
@@ -95,7 +80,7 @@ async function evaluatePrompt() {
       prompt: prompt,
       model: selectedModel,
       model_name: el("mistralModel")?.value?.trim() || "open-mistral-7b",
-      api_key: apiKey || null,
+      api_key: el("mistralKey")?.value?.trim() || null,
       session_id: localStorage.getItem("north_session_id"),
       parent_branch_id: el("linkLineage")?.checked ? localStorage.getItem("north_last_branch_id") : null,
       n_reads: parseInt(el("apertureReads")?.value || "1", 10)
@@ -130,24 +115,20 @@ async function evaluatePrompt() {
     }
     setStatus("ERROR", 0, "N/A");
   } finally {
-    // 2. END PROCESSING STATE
     btn.disabled = false;
-    btn.classList.remove("processing-pulse"); // Stop CSS Animation
-    btn.textContent = "INITIATE AUDIT"; // Reset text
+    btn.classList.remove("processing-pulse");
+    btn.textContent = "INITIATE AUDIT";
   }
 }
 
-// UI Setup & Listeners
 document.addEventListener("DOMContentLoaded", () => {
   if(!localStorage.getItem("north_session_id")) {
     localStorage.setItem("north_session_id", crypto.randomUUID());
   }
-
   el("btnEvaluate")?.addEventListener("click", evaluatePrompt);
-  el("pillModel")?.addEventListener("click", () => setVisible("modelModal", true));
-  el("closeModelModal")?.addEventListener("click", () => setVisible("modelModal", false));
+  
+  // Cleaned up unused toggles to keep it "Permanent"
   el("aboutToggle")?.addEventListener("click", () => el("aboutContent").classList.toggle("hidden"));
-  el("pillGuide")?.addEventListener("click", () => el("guideDrawer").classList.toggle("hidden"));
 
   document.querySelectorAll(".engine-option").forEach(btn => {
     btn.onclick = () => {
@@ -155,7 +136,6 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.classList.add("active");
       selectedModel = btn.getAttribute("data-model");
       el("modelNamePill").textContent = selectedModel.toUpperCase();
-      setVisible("mistralConfig", selectedModel === "mistral");
     };
   });
 });
