@@ -30,7 +30,7 @@ body {
 
 header {
     width: 100%; max-width: 650px;
-    padding: 80px 20px 40px; /* Vertical drop */
+    padding: 80px 20px 40px; 
 }
 
 /* Swappable AI Section */
@@ -68,12 +68,28 @@ textarea {
     display: flex; justify-content: flex-end; margin-top: 20px;
 }
 
+/* MODIFIED: Changed from a tiny circle to a flexible pill for text feedback */
 #btnEvaluate {
-    width: 44px; height: 44px; background: var(--accent);
-    border: none; border-radius: 50%; cursor: pointer;
+    min-width: 140px; /* Gives room for "AUDITING SYSTEM..." */
+    height: 44px; 
+    background: var(--accent);
+    color: #000; /* Contrast for the white button */
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none; 
+    border-radius: 22px; /* Pill shape */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0 20px;
 }
 
-/* Results Spacing (Fixes Messiness) */
+#btnEvaluate:hover {
+    filter: brightness(0.9);
+}
+
+/* Results Spacing */
 #outputCard {
     margin-top: 80px;
     width: 100%; max-width: 650px;
@@ -81,13 +97,14 @@ textarea {
     padding: 40px 20px 100px;
 }
 
+/* Results Formatting (FMO) */
 #fmo {
     font-family: "SF Mono", "Fira Code", monospace;
     font-size: 0.9rem; line-height: 1.8; color: var(--text-bright);
     white-space: pre-wrap;
 }
 
-/* Typography for FMO Headers */
+/* This handles the Markdown headers we created in JS */
 #fmo h3 {
     font-size: 0.8rem; color: var(--text-muted);
     text-transform: uppercase; letter-spacing: 1px;
@@ -96,11 +113,35 @@ textarea {
 
 .hidden { display: none !important; }
 
-/* Loading Animation */
+/* Existing Loading Animation */
 .loading { animation: triplet-blink 1.2s infinite ease-in-out; }
 @keyframes triplet-blink {
     0%, 20% { opacity: 1; }
     30%, 50% { opacity: 0.2; }
     60%, 80% { opacity: 1; }
     90%, 100% { opacity: 0.2; }
+}
+
+/* --- NORTH PROCESSING ANIMATION (INTEGRATED) --- */
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    opacity: 1; 
+    filter: brightness(100%);
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    filter: brightness(140%);
+    transform: scale(0.98); 
+  }
+}
+
+.processing-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+  cursor: wait !important;
+  pointer-events: none; 
+  background: #27272a !important; /* Button turns dark while processing */
+  color: #a1a1aa !important;
+  border: 1px solid #3f3f46 !important;
 }
