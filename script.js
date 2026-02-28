@@ -1,6 +1,6 @@
 /**
- * NORTH Master Controller - Final Hardened Logic
- * Target: https://north-backend-kdgq.onrender.com/evaluate/
+ * NORTH Master Controller - Hardened Logic
+ * Matches gate.py output: status, scores, chord (tonic/ballast), and diagnostics.
  */
 
 const API_URL = "https://north-backend-kdgq.onrender.com/evaluate/"; 
@@ -20,7 +20,7 @@ function setStatus(status, ms, modelUsed){
 }
 
 function setGuide(data){
-  // Map Triadic Scores from gate.py
+  // Map Triadic Scores (I, R, Sem, L, Tau, Rho, Rho_Crit)
   const s = data.scores || {};
   const mapping = { 
     scoreI: s.I, scoreR: s.R, scoreSem: s.Sem, scoreL: s.L, 
@@ -28,12 +28,12 @@ function setGuide(data){
   };
   Object.entries(mapping).forEach(([id, val]) => { if(el(id)) el(id).textContent = val ?? "—"; });
 
-  // Map Diagnostics
+  // Map Diagnostics & Branching
   if(el("eventType")) el("eventType").textContent = data.diagnostics?.event_type ?? "—";
   if(el("nReads")) el("nReads").textContent = data.diagnostics?.reads ?? "1";
   if(el("branchId")) el("branchId").textContent = data.branch?.branch_id ?? "—";
 
-  // Map Framework Chord (The Core Engine)
+  // Map Framework Chord Rendering
   const lineage = el("lineage");
   if(lineage && data.chord) {
     lineage.innerHTML = "";
@@ -41,9 +41,8 @@ function setGuide(data){
     items.forEach((item, i) => {
       lineage.innerHTML += `
         <div class="p-3 mb-2 bg-zinc-900/80 border border-zinc-800 rounded-lg">
-          <div class="text-[9px] uppercase text-zinc-500">${i === 0 ? 'Tonic' : 'Ballast ' + i}</div>
-          <div class="text-[11px] text-zinc-100 font-medium">${item.meta?.Framework_Name || "Unknown"}</div>
-          <div class="text-[9px] text-zinc-600">${item.meta?.Macro_Region || "—"} · ${item.meta?.Lineage_Cluster || "—"}</div>
+          <div class="text-[9px] uppercase text-zinc-500">${i === 0 ? 'Tonic' : 'Ballast'}</div>
+          <div class="text-[11px] text-zinc-100 font-medium">${item.meta?.Framework_Name || "—"}</div>
         </div>`;
     });
   }
@@ -65,9 +64,10 @@ async function evaluatePrompt() {
       provider: selectedModel === "mistral" ? "mistral" : null,
       model_name: el("mistralModel")?.value?.trim() || "open-mistral-7b",
       api_key: el("mistralKey")?.value?.trim() || null,
+      api_base: null, 
       session_id: localStorage.getItem("north_session_id"),
       parent_branch_id: el("linkLineage")?.checked ? localStorage.getItem("north_last_branch_id") : null,
-      n_reads: parseInt(el("apertureReads")?.value || "1", 10)
+      n_reads: parseInt(el("apertureReads")?.value || "1")
     };
 
     const t0 = performance.now();
@@ -83,12 +83,10 @@ async function evaluatePrompt() {
     }
 
     const data = await res.json();
-    const ms = performance.now() - t0;
-
     if(data.branch?.branch_id) localStorage.setItem("north_last_branch_id", data.branch.branch_id);
 
-    setStatus(data.status, ms, data.model_used);
-    if(el("fmo")) el("fmo").textContent = data.fused_meaning_object || data.raw_text || "—";
+    setStatus(data.status, performance.now() - t0, data.model_used);
+    if(el("fmo")) el("fmo").textContent = data.fused_meaning_object || data.raw_text;
     setGuide(data);
     setVisible("outputCard", true);
 
@@ -103,11 +101,12 @@ async function evaluatePrompt() {
   }
 }
 
-// Initializer
+// Global Bindings
 document.addEventListener("DOMContentLoaded", () => {
   if(!localStorage.getItem("north_session_id")) localStorage.setItem("north_session_id", crypto.randomUUID());
   if(el("btnEvaluate")) el("btnEvaluate").onclick = evaluatePrompt;
   
+  // UI Drawers
   if(el("pillGuide")) el("pillGuide").onclick = () => el("guideDrawer").classList.toggle("hidden");
   if(el("pillModel")) el("pillModel").onclick = () => setVisible("modelModal", true);
   if(el("closeModelModal")) el("closeModelModal").onclick = () => setVisible("modelModal", false);
@@ -116,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.onclick = () => {
       selectedModel = btn.getAttribute("data-model");
       if(el("modelNamePill")) el("modelNamePill").textContent = selectedModel.toUpperCase();
-      setVisible("mistralConfig", selectedModel === "mistral");
       setVisible("modelModal", false);
     };
   });
