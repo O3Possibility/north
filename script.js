@@ -1,6 +1,6 @@
 /**
- * NORTH Master Controller - Hardened Logic
- * Matches gate.py output: status, scores, chord (tonic/ballast), and diagnostics.
+ * NORTH MASTER CONTROLLER
+ * TARGET: https://north-backend-kdgq.onrender.com/evaluate/
  */
 
 const API_URL = "https://north-backend-kdgq.onrender.com/evaluate/"; 
@@ -28,12 +28,7 @@ function setGuide(data){
   };
   Object.entries(mapping).forEach(([id, val]) => { if(el(id)) el(id).textContent = val ?? "—"; });
 
-  // Map Diagnostics & Branching
-  if(el("eventType")) el("eventType").textContent = data.diagnostics?.event_type ?? "—";
-  if(el("nReads")) el("nReads").textContent = data.diagnostics?.reads ?? "1";
-  if(el("branchId")) el("branchId").textContent = data.branch?.branch_id ?? "—";
-
-  // Map Framework Chord Rendering
+  // Map Framework Chord Lineage
   const lineage = el("lineage");
   if(lineage && data.chord) {
     lineage.innerHTML = "";
@@ -50,6 +45,8 @@ function setGuide(data){
 
 async function evaluatePrompt() {
   const prompt = el("prompt")?.value.trim();
+  const apiKey = el("mistralKey")?.value?.trim(); // CRITICAL for 401 Fix
+  
   if(!prompt) return;
 
   el("btnEvaluate").disabled = true;
@@ -63,11 +60,10 @@ async function evaluatePrompt() {
       model: selectedModel,
       provider: selectedModel === "mistral" ? "mistral" : null,
       model_name: el("mistralModel")?.value?.trim() || "open-mistral-7b",
-      api_key: el("mistralKey")?.value?.trim() || null,
-      api_base: null, 
+      api_key: apiKey || null,
       session_id: localStorage.getItem("north_session_id"),
       parent_branch_id: el("linkLineage")?.checked ? localStorage.getItem("north_last_branch_id") : null,
-      n_reads: parseInt(el("apertureReads")?.value || "1")
+      n_reads: 1
     };
 
     const t0 = performance.now();
@@ -77,14 +73,11 @@ async function evaluatePrompt() {
       body: JSON.stringify(payload)
     });
 
-    if(!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Gate Error");
-    }
-
     const data = await res.json();
-    if(data.branch?.branch_id) localStorage.setItem("north_last_branch_id", data.branch.branch_id);
+    if(!res.ok) throw new Error(data.detail || "Audit Failed");
 
+    localStorage.setItem("north_last_branch_id", data.branch?.branch_id);
+    
     setStatus(data.status, performance.now() - t0, data.model_used);
     if(el("fmo")) el("fmo").textContent = data.fused_meaning_object || data.raw_text;
     setGuide(data);
@@ -101,21 +94,12 @@ async function evaluatePrompt() {
   }
 }
 
-// Global Bindings
 document.addEventListener("DOMContentLoaded", () => {
   if(!localStorage.getItem("north_session_id")) localStorage.setItem("north_session_id", crypto.randomUUID());
   if(el("btnEvaluate")) el("btnEvaluate").onclick = evaluatePrompt;
   
-  // UI Drawers
+  // Bind Drawer Toggles
   if(el("pillGuide")) el("pillGuide").onclick = () => el("guideDrawer").classList.toggle("hidden");
   if(el("pillModel")) el("pillModel").onclick = () => setVisible("modelModal", true);
   if(el("closeModelModal")) el("closeModelModal").onclick = () => setVisible("modelModal", false);
-
-  document.querySelectorAll("[data-model]").forEach(btn => {
-    btn.onclick = () => {
-      selectedModel = btn.getAttribute("data-model");
-      if(el("modelNamePill")) el("modelNamePill").textContent = selectedModel.toUpperCase();
-      setVisible("modelModal", false);
-    };
-  });
 });
