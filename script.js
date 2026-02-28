@@ -1,6 +1,6 @@
 /**
  * NORTH MASTER CONTROLLER
- * Synchronized with Admissibility Engine & Updated gate.py
+ * Full Integration: Markdown + Lineage Fix + Pulse Animation
  */
 
 const API_URL = "https://north-backend-kdgq.onrender.com/evaluate/"; 
@@ -11,8 +11,8 @@ const setVisible = (id, show) => { if(el(id)) el(id).classList.toggle("hidden", 
 let selectedModel = "mistral"; 
 
 /**
- * STEP 1: MARKDOWN FORMATTER
- * Converts the "Hard Gate" hierarchy into visual HTML headers and bold text.
+ * MARKDOWN FORMATTER
+ * Converts ### and ** into visual hierarchy for the FMO report.
  */
 function formatMarkdown(text) {
   if (!text) return "";
@@ -23,9 +23,6 @@ function formatMarkdown(text) {
     .replace(/\n/g, '<br>'); 
 }
 
-/**
- * STEP 2: STATUS & TIMING
- */
 function setStatus(status, ms, modelUsed){
   if(el("statusText")) el("statusText").textContent = status || "—";
   if(el("timingText")) el("timingText").textContent = ms ? `· ${Math.round(ms)}ms · ${modelUsed}` : "";
@@ -34,11 +31,10 @@ function setStatus(status, ms, modelUsed){
 }
 
 /**
- * STEP 3: THE GUIDE & LINEAGE DRAWER
- * Fixed to map the new 'item.name' path from gate.py and clean up decimals.
+ * THE GUIDE & LINEAGE DRAWER
+ * Populates the side drawer with framework names and 3-decimal precision scores.
  */
 function setGuide(data){
-  // Map Triadic scores with fixed decimal precision for a "cleaner" look
   const s = data.scores || {};
   const mapping = { 
     scoreI: s.I, scoreR: s.R, scoreSem: s.Sem, scoreL: s.L, 
@@ -47,24 +43,20 @@ function setGuide(data){
   
   Object.entries(mapping).forEach(([id, val]) => { 
     if(el(id)) {
-        // Formats to 3 decimal places if it's a number, otherwise shows the placeholder
         el(id).textContent = (typeof val === 'number') ? val.toFixed(3) : (val ?? "—");
     }
   });
 
-  // Map Lineage/Branching metadata
   if(el("branchId")) el("branchId").textContent = data.branch?.branch_id ?? "—";
   if(el("parentBranchId")) el("parentBranchId").textContent = data.branch?.parent_id ?? "—";
   if(el("branchDepth")) el("branchDepth").textContent = data.branch?.depth ?? "0";
 
-  // Render Framework Chord (Lineage)
   const lineage = el("lineage");
   if(lineage && data.chord) {
     lineage.innerHTML = "";
     const items = [data.chord.tonic, ...(data.chord.ballasts || [])].filter(Boolean);
     
     items.forEach((item, i) => {
-      // Logic: Prioritize the new 'item.name' field, fallback to 'item.meta'
       const frameName = item.name || item.meta?.name || item.meta?.Framework_Name || "Unknown Framework";
       const frameId = item.id || "N/A";
 
@@ -79,16 +71,21 @@ function setGuide(data){
 }
 
 /**
- * STEP 4: CORE EVALUATION LOGIC
- * Updated to use innerHTML for the Fused Meaning Object formatting.
+ * CORE EVALUATION LOOP
+ * Includes the Pulse Animation triggers.
  */
 async function evaluatePrompt() {
   const prompt = el("prompt")?.value.trim();
   const apiKey = el("mistralKey")?.value?.trim(); 
+  const btn = el("btnEvaluate");
   
-  if(!prompt) return;
+  if(!prompt || !btn) return;
 
-  el("btnEvaluate").disabled = true;
+  // 1. START PROCESSING STATE
+  btn.disabled = true;
+  btn.classList.add("processing-pulse"); // Trigger CSS Animation
+  btn.textContent = "AUDITING SYSTEM..."; // Visual feedback
+
   setVisible("outputCard", false);
   setVisible("errorBox", false);
   setStatus("EVALUATING...", 0, "...");
@@ -118,7 +115,6 @@ async function evaluatePrompt() {
     
     setStatus(data.status, performance.now() - t0, data.model_used);
 
-    // CRITICAL UPDATE: Convert Markdown to HTML for the FMO display
     if(el("fmo")) {
         const content = data.fused_meaning_object || data.raw_text;
         el("fmo").innerHTML = formatMarkdown(content);
@@ -134,7 +130,10 @@ async function evaluatePrompt() {
     }
     setStatus("ERROR", 0, "N/A");
   } finally {
-    el("btnEvaluate").disabled = false;
+    // 2. END PROCESSING STATE
+    btn.disabled = false;
+    btn.classList.remove("processing-pulse"); // Stop CSS Animation
+    btn.textContent = "INITIATE AUDIT"; // Reset text
   }
 }
 
